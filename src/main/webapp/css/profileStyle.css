@@ -1,0 +1,325 @@
+/* ==========================================================================
+   1. RESET CHUNG & ĐỊNH DẠNG NỀN
+   ========================================================================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #f0f2f5;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+
+/* ==========================================================================
+   3. KHUNG CHỨA PROFILE & BANNER TỰ CÂN ĐỐI (FIX CẮT ẢNH)
+   ========================================================================== */
+.profile-container {
+    background: #ffffff;
+    width: 750px;
+    border-radius: 24px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    position: relative;
+    margin: 110px auto 25px auto;
+}
+
+/* Tăng chiều cao lên 210px để lấy được nhiều chi tiết ảnh banner hơn */
+.profile-banner-top {
+    width: 100%;
+    height: 210px;
+    overflow: hidden;
+    background-color: #e4e6eb;
+}
+
+.banner-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+}
+
+/* FIX LỖI MẤT CÂN ĐỐI: Giữ tâm ảnh làm trọng tâm, cắt đều rìa ngoài */
+.hutao-banner-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;       /* Ảnh phủ kín khung mà không bị bóp méo */
+    object-position: center; /* Luôn căn vào chính giữa bức ảnh gốc */
+}
+
+/* ==========================================================================
+   4. LAYOUT THÂN DƯỚI & AVATAR ĐÈ LÊN RANH GIỚI BANNER
+   ========================================================================== */
+.profile-body-layout {
+    display: flex;
+    padding: 0 25px 25px 25px;
+    position: relative;
+    background: #ffffff; /* Trả lại nền trắng sạch sẽ dưới đường ranh giới */
+}
+
+/* Cột thông tin phụ bên trái */
+.profile-sidebar-info {
+    width: 32%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-right: 10px;
+}
+
+/* Đẩy ngược avatar lên trên để cắt ngang đường ranh giới banner */
+.avatar-container-block {
+    margin-top: -75px; /* Giữ vị trí đè hoàn hảo */
+    margin-bottom: 15px;
+    z-index: 10;
+}
+
+.avatar-wrapper {
+    position: relative;
+    width: 130px;
+    height: 130px;
+    border-radius: 24px;
+    overflow: hidden;
+    border: 4px solid #ffffff; /* Viền trắng dày tạo khối tách biệt rõ ràng */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    background: #ffffff;
+    cursor: pointer;
+}
+
+.profile-avatar {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Lớp phủ đen khi hover để đổi ảnh */
+.avatar-overlay, .banner-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #ffffff;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.banner-overlay { font-size: 14px; font-weight: 600; gap: 8px; }
+.avatar-overlay i { font-size: 24px; }
+
+.avatar-wrapper:hover .avatar-overlay,
+.banner-wrapper:hover .banner-overlay {
+    opacity: 1;
+}
+
+#avatarInput, #bannerInput {
+    display: none;
+}
+
+/* Tên và thông tin chữ bên cột trái */
+.profile-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 4px;
+    text-align: center;
+}
+
+.profile-username {
+    font-size: 13px;
+    color: #8c8c8c;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.divider {
+    width: 80%;
+    border: none;
+    border-top: 1px solid #e8e8e8;
+    margin: 10px 0;
+}
+
+.btn-edit-profile {
+    width: 100%;
+    padding: 8px 16px;
+    background-color: #e4e6eb;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    color: #050505;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.followers-count {
+    margin-top: 15px;
+    font-size: 12px;
+    color: #8c8c8c;
+    text-align: center;
+}
+
+/* Cột chứa form nhập liệu bên phải */
+.profile-main-content {
+    width: 68%;
+    padding-top: 25px;
+}
+
+/* ==========================================================================
+   5. CÁC Ô NHẬP LIỆU FORM & SOCIAL NETWORKS
+   ========================================================================== */
+.input-group {
+    position: relative;
+    margin-bottom: 22px;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+    padding: 10px 15px;
+}
+
+.input-label {
+    position: absolute;
+    top: -10px;
+    left: 12px;
+    background: #ffffff;
+    padding: 0 6px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #212529;
+}
+
+.input-group input {
+    width: 100%;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 14px;
+    color: #495057;
+}
+
+.password-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.edit-password-link {
+    color: #10b981;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.social-networks-box {
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 25px;
+    position: relative;
+    background-color: #f8f9fa;
+}
+
+.social-title {
+    position: absolute;
+    top: -10px;
+    left: 12px;
+    background: #ffffff;
+    padding: 0 6px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #212529;
+}
+
+.social-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.social-item:last-child { margin-bottom: 0; }
+.social-item i { font-size: 18px; width: 25px; }
+.facebook-icon { color: #1877f2; }
+.mail-icon { color: #65676b; }
+.instagram-icon { color: #e1306c; }
+
+.social-text {
+    flex: 1;
+    color: #495057;
+    font-size: 13px;
+    margin-left: 5px;
+}
+
+.verified-icon { color: #1877f2; font-size: 14px; }
+
+.btn-save {
+    width: 100%;
+    padding: 12px;
+    background-color: #10b981;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.btn-signout {
+    width: 100%;
+    padding: 12px;
+    background-color: #f43f5e;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+/* ==========================================================================
+   6. ĐỊNH DẠNG FOOTER CHÂN TRANG ĐEN TUYỀN
+   ========================================================================== */
+.profile-footer {
+    background-color: #333333 !important;
+    color: #ffffff;
+    text-align: center;
+    padding: 20px 0;
+    margin-top: auto;
+    width: 100%;
+    font-size: 13px;
+}
+
+.footer-hotline { margin-bottom: 5px; font-weight: 600; color: #10b981; }
+.footer-copy { color: #b3b3b3; }
+
+/* Giao diện hộp thông báo Toast xinh xắn */
+.toast-success-box {
+    position: fixed;
+    top: 30px;
+    right: 30px;
+    background-color: #10b981; /* Màu xanh mint thanh lịch */
+    color: #ffffff;
+    padding: 15px 25px;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(16, 185, 129, 0.25);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.4s ease;
+    animation: toastSlideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes toastSlideIn {
+    from { transform: translateX(120%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}

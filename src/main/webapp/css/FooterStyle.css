@@ -1,0 +1,12 @@
+.footer-dark-strip {
+    background: #141414;
+    color: #ffffff;
+    padding: 40px 60px;
+    margin-top: 50px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 3px solid #00bcd4;
+    box-sizing: border-box;
+    width: 100%;
+}
