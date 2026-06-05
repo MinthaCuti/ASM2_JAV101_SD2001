@@ -538,7 +538,7 @@
             const label = document.createElement('span');
             label.textContent = 'Tuổi trẻ em thứ ' + i + ':';
             label.style.fontSize = '0.75rem';
-            label.style.color = '#555';
+            label.style.color = 'var(--text-color)';
 
             const input = document.createElement('input');
             input.type = 'number';

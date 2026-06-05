@@ -88,8 +88,8 @@
         </tbody>
     </table>
 </div>
-
-<jsp:include page="/footer.jsp" />
-
 </body>
+<footer>
+    <jsp:include page="/footer.jsp" />
+</footer>
 </html>

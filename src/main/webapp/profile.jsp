@@ -7,6 +7,7 @@
     <title>Profile - Verdelle Hotel</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/profileStyle.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/NavStyle.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/FooterStyle.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
@@ -70,7 +71,7 @@
                 <div class="input-group password-group">
                     <label class="input-label">Password</label>
                     <div class="password-wrapper">
-                        <input type="password" id="passInput" name="password" value="12345678" readonly>
+                        <input type="password" id="passInput" name="password" value="${sessionScope.user.password}" readonly>
                         <a href="#" class="edit-password-link" onclick="enablePassword(event)">Edit</a>
                     </div>
                 </div>
@@ -104,10 +105,7 @@
     </div>
 </div>
 
-<footer class="profile-footer">
-    <p class="footer-hotline">Hotline: 0834178906</p>
-    <p class="footer-copy">&copy; 2026 Designed by Verdelle Mintha</p>
-</footer>
+<jsp:include page="footer.jsp" />
 
 <script>
     const hamburgerBtn = document.getElementById('hamburgerBtn');

@@ -17,6 +17,9 @@ public class User {
     @Column(name = "LastName")
     private String lastName;
 
+    @Column(name = "Email")
+    private String email;
+
     @Column(name = "CountryCode")
     private String countryCode;
 
@@ -37,7 +40,6 @@ public class User {
     }
 
     // Constructor đầy đủ tham số
-
     public User(int id, String firstName, String lastName, String countryCode, String phoneNumber, String password, String role, Boolean isActive) {
         this.id = id;
         this.firstName = firstName;
@@ -49,9 +51,19 @@ public class User {
         this.isActive = isActive;
     }
 
+    public User(int id, String firstName, String lastName, String email, String countryCode, String phoneNumber, String password, String role, Boolean isActive) {
+        this.id = id;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.countryCode = countryCode;
+        this.phoneNumber = phoneNumber;
+        this.password = password;
+        this.role = role;
+        this.isActive = isActive;
+    }
 
     // --- BỘ GETTER VÀ SETTER ---
-
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
 
@@ -60,6 +72,9 @@ public class User {
 
     public String getLastName() { return lastName; }
     public void setLastName(String lastName) { this.lastName = lastName; }
+
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
 
     public String getCountryCode() { return countryCode; }
     public void setCountryCode(String countryCode) { this.countryCode = countryCode; }

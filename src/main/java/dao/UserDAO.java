@@ -18,15 +18,16 @@ import java.util.List;
 public class UserDAO {
 
     // 1. Thực hiện chèn tài khoản mới khi Đăng ký
-    public boolean registerUser(String firstName, String lastName, String countryCode, String phoneNumber, String password) {
-        String query = "INSERT INTO Users (FirstName, LastName, CountryCode, PhoneNumber, Password) VALUES (?, ?, ?, ?, ?)";
+    public boolean registerUser(String firstName, String lastName, String email, String countryCode, String phoneNumber, String password) {
+        String query = "INSERT INTO Users (FirstName, LastName, Email, CountryCode, PhoneNumber, Password, Role, IsActive) VALUES (?, ?, ?, ?, ?, ?, 'Customer', 1)";
         try (Connection conn = DBConnect.getConnection();
              PreparedStatement ps = conn.prepareStatement(query)) {
             ps.setString(1, firstName);
             ps.setString(2, lastName);
-            ps.setString(3, countryCode);
-            ps.setString(4, phoneNumber);
-            ps.setString(5, password);
+            ps.setString(3, email);
+            ps.setString(4, countryCode);
+            ps.setString(5, phoneNumber);
+            ps.setString(6, password);
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
             e.printStackTrace();

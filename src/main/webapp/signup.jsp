@@ -53,6 +53,11 @@
                 </div>
 
                 <div class="floating-group">
+                    <input type="email" id="email" name="email" placeholder=" " required>
+                    <label for="email">Địa chỉ Email</label>
+                </div>
+
+                <div class="floating-group">
                     <input type="password" id="password" name="password" placeholder=" " required>
                     <label for="password">Mật khẩu</label>
                 </div>

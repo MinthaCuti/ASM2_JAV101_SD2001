@@ -181,13 +181,11 @@
     <form method="POST" action="${pageContext.request.contextPath}/update">
         <div class="form-grid">
 
-            <!-- Ô 1: ID Tài khoản (Khóa chính - Chế độ Readonly không cho sửa phá DB) -->
             <div class="form-group col-4">
                 <label>ID Thành Viên</label>
                 <input type="text" class="form-control" name="id" value="${user.id}" readonly>
             </div>
 
-            <!-- Ô 2: Phân quyền vai trò hệ thống -->
             <div class="form-group col-8">
                 <label>Vai Trò Hệ Thống (Role)</label>
                 <select name="role" class="form-select">
@@ -197,32 +195,32 @@
                 </select>
             </div>
 
-            <!-- Ô 3: Họ người dùng -->
             <div class="form-group col-6">
-                <label>Tên</label>
+                <label>Tên (First name)</label>
                 <input type="text" class="form-control" name="firstName" value="${user.firstName}" required>
             </div>
 
-            <!-- Ô 4: Tên người dùng -->
             <div class="form-group col-6">
-                <label>Họ</label>
+                <label>Họ (Last name)</label>
                 <input type="text" class="form-control" name="lastName" value="${user.lastName}" required>
             </div>
 
-            <!-- Ô 5: Mã vùng điện thoại quốc gia -->
             <div class="form-group col-4">
                 <label>Mã Quốc Gia</label>
                 <input type="text" class="form-control" name="countryCode" value="${user.countryCode}"
                        placeholder="VD: +84" required>
             </div>
 
-            <!-- Ô 6: Số điện thoại dùng làm tài khoản đăng nhập chính -->
             <div class="form-group col-8">
                 <label>Số Điện Thoại Đăng Nhập</label>
                 <input type="text" class="form-control" name="phoneNumber" value="${user.phoneNumber}" required>
             </div>
 
-            <!-- Ô 7: Mật khẩu đăng nhập -->
+            <div class="form-group col-12">
+                <label>Địa Chỉ Email</label>
+                <input type="email" class="form-control" name="email" value="${user.email}" required>
+            </div>
+
             <div class="form-group col-12">
                 <label>Mật Khẩu Mới</label>
                 <input type="password" class="form-control" name="password" value="${user.password}" required>
@@ -241,7 +239,6 @@
     </form>
 </div>
 
-<!-- 2. Nhúng Footer của Verdelle Hotel -->
 <jsp:include page="footer.jsp"/>
 
 </body>

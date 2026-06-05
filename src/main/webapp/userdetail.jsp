@@ -18,6 +18,14 @@
             --primary-teal: #00bcd4;
         }
 
+        body.dark-mode {
+            --bg-color: #343434;
+            --card-bg: #1e1e1e;
+            --text-color: #e5e7eb;
+            --sub-text: #888888;
+            --border-color: #333333;
+        }
+
         html, body {
             margin: 0;
             padding: 0;
@@ -180,6 +188,11 @@
         <div class="form-group col-8">
             <label>Số Điện Thoại Đăng Nhập</label>
             <input type="text" class="form-control" value="${user.phoneNumber}" readonly>
+        </div>
+
+        <div class="form-group col-12">
+            <label>Địa Chỉ Email</label>
+            <input type="email" class="form-control" value="${user.email}" readonly>
         </div>
 
         <div class="form-group col-12">

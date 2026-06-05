@@ -261,6 +261,7 @@ input[type="range"]::-webkit-slider-thumb:hover {
 
 .ruler-ticks li {
     position: relative;
+
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -276,3 +277,9 @@ input[type="range"]::-webkit-slider-thumb:hover {
     background: var(--text-color);
     margin-bottom: 4px;
 }
+.counter-controls span {
+    color: var(--text-color) !important;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+

@@ -33,6 +33,7 @@ public class UpdateController extends HttpServlet {
         int id = Integer.parseInt(req.getParameter("id"));
         String firstName = req.getParameter("firstName");
         String lastName = req.getParameter("lastName");
+        String email = req.getParameter("email");
         String countryCode = req.getParameter("countryCode");
         String phoneNumber = req.getParameter("phoneNumber");
         String password = req.getParameter("password");
@@ -42,9 +43,10 @@ public class UpdateController extends HttpServlet {
         User user = dao.findById(id);
 
         if (user != null) {
-            // 2. Đổ dữ liệu mới vào đối tượng user (Đã map khớp 100% với Model của cậu)
+            // 2. Đổ dữ liệu mới vào đối tượng user
             user.setFirstName(firstName);
             user.setLastName(lastName);
+            user.setEmail(email);
             user.setCountryCode(countryCode);
             user.setPhoneNumber(phoneNumber);
             user.setPassword(password);
@@ -55,7 +57,6 @@ public class UpdateController extends HttpServlet {
         }
 
         // 4. Cập nhật thành công, điều hướng về lại trang quản lý chính
-        // (Tớ đổi từ "/index" thành "/quan-ly-tai-khoan" cho đúng với router điều hướng danh sách của cậu nhé)
         resp.sendRedirect(req.getContextPath() + "/quan-ly-tai-khoan");
     }
 }

@@ -21,19 +21,20 @@ public class RegisterController extends HttpServlet {
 
         String firstName = request.getParameter("firstName");
         String lastName = request.getParameter("lastName");
+        String email = request.getParameter("email");
         String countryCode = request.getParameter("country");
         String phoneNumber = request.getParameter("phone");
         String password = request.getParameter("password");
         String confirmPassword = request.getParameter("confirmPassword");
-
-        UserDAO userDAO = new UserDAO();
-        boolean isSuccess = userDAO.registerUser(firstName, lastName, countryCode, phoneNumber, password);
 
         if (password == null || confirmPassword == null || !password.equals(confirmPassword)) {
             // Nếu không khớp, quay về trang signin kèm mã lỗi riêng biệt để hiển thị thông báo
             response.sendRedirect("signup.jsp?error=passwordMismatch");
             return; // Dừng xử lý luôn
         }
+
+        UserDAO userDAO = new UserDAO();
+        boolean isSuccess = userDAO.registerUser(firstName, lastName, email, countryCode, phoneNumber, password);
 
         if (isSuccess) {
             // Đăng ký xong tự nạp session chào mừng rồi nhảy vào trang chủ luôn

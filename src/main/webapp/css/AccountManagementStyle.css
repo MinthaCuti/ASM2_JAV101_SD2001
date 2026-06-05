@@ -1,9 +1,23 @@
 :root {
+    --bg-color: #dce7f7;
+    --card-bg: #ffffff;
+    --text-color: #000000;
+    --navbar-bg: rgba(0, 0, 0, 0.9);
+    --border-color: #262626;
+    --primary-teal: #00bcd4;
+    --row-hover: #e2e8f0;
+    --btn-detail-hover-bg: #000000;
+    --btn-detail-hover-text: #ffffff;
+}
+body.dark-mode {
     --bg-color: #0a0a0a;
     --card-bg: #1e1e1e;
-    --text-color: #ffffff;
-    --border-color: #2d2d2d;
-    --primary-teal: #00bcd4;
+    --text-color: #e5e7eb;
+    --sub-text: #888888;
+    --border-color: #333333;
+    --row-hover: #252525;
+    --btn-detail-hover-bg: #ffffff;
+    --btn-detail-hover-text: #000000;
 }
 
 html, body {
@@ -71,7 +85,7 @@ html, body {
     transition: background-color 0.2s;
 }
 .custom-table tbody tr:hover {
-    background-color: #252525; /* Hiệu ứng hover dòng tinh tế */
+    background-color: var(--row-hover) !important;
 }
 
 /* Các nút hành động điều hướng (Detail, Update, Delete) */
@@ -87,10 +101,14 @@ html, body {
     gap: 5px;
 }
 .btn-detail {
-    color: #ffffff;
-    border: 1px solid #ffffff;
+    color: var(--text-color);
+    border: 1px solid var(--text-color);
 }
 .btn-detail:hover {
+    background: #000000;
+    color: #ffffff;
+}
+.btn-detail.dark-mode:hover {
     background: #ffffff;
     color: #000000;
 }
