@@ -34,6 +34,9 @@
                 <div id="error-message" style="display: none; color: #ff4d4d; font-size: 0.85rem; margin-bottom: 15px; font-weight: bold; text-align: center;">
                 </div>
 
+                <div id="success-message" style="display: none; color: #4caf50; font-size: 0.85rem; margin-bottom: 15px; font-weight: bold; text-align: center;">
+                </div>
+
                 <div class="input-group">
                     <i class="fa-solid fa-phone icon"></i>
                     <input type="text" placeholder="Phone Number" name="phone" required>
@@ -52,9 +55,9 @@
             <div class="divider"><hr><span>OR</span><hr></div>
             <p class="social-text">Sign up with Social Networks</p>
             <div class="social-icons">
-                <a href="#" class="fb"><i class="fa-brands fa-facebook-f"></i></a>
-                <a href="#" class="gg"><i class="fa-brands fa-google"></i></a>
-                <a href="#" class="tw"><i class="fa-brands fa-twitter"></i></a>
+                <a href="https://accounts.google.com/o/oauth2/auth?client_id=919945983221-5dd3uvtnqlquvtuj9vrqrj6jcqemo6us.apps.googleusercontent.com&redirect_uri=http://localhost:8080/ASM2_JAV101_SD2001_war/GoogleLoginController&response_type=code&scope=email%20profile" class="gg">
+                    <i class="fa-brands fa-google"></i>
+                </a>
             </div>
         </div>
     </main>
@@ -68,14 +71,20 @@
         const errorDiv = document.getElementById('error-message');
 
         if (errorType === 'wrongPassword') {
-            errorDiv.textContent = "Mật khẩu nhập vào không chính xác!";
+            errorDiv.textContent = "Thông tin không chính xác!";
         } else if (errorType === 'userNotFound') {
-            errorDiv.textContent = "Số điện thoại không tồn tại trong hệ thống!";
+            errorDiv.textContent = "Thông tin không chính xác!";
         } else {
             errorDiv.textContent = "Đăng nhập thất bại! Vui lòng thử lại.";
         }
 
         errorDiv.style.display = 'block'; // Hiện file thông báo lỗi lên
+    }
+    // Kiểm tra nếu đăng ký tài khoản thành công chuyển hướng về
+    if (urlParams.has('status') && urlParams.get('status') === 'registerSuccess') {
+        const successDiv = document.getElementById('success-message');
+        successDiv.textContent = "Đăng ký tài khoản thành công! Mời cậu đăng nhập lại nhé.";
+        successDiv.style.display = 'block'; // Hiện thông báo thành công
     }
 </script>
 </body>

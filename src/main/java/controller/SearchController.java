@@ -23,7 +23,7 @@ public class SearchController extends HttpServlet {
         String action = request.getParameter("action");
         UserDAO dao = new UserDAO();
 
-        // 1. HÀNH ĐỘNG MẶC ĐỊNH: Tìm kiếm danh sách khách sạn theo khu vực
+        // 1. HÀNH ĐỘNG MẶC ĐỊNH HOẶC TÌM KIẾM KHÁCH SẠN
         if (action == null || action.equals("searchHotel")) {
             String destination = request.getParameter("destination");
             String dateRange = request.getParameter("dateRange");
@@ -43,36 +43,44 @@ public class SearchController extends HttpServlet {
             int hotelId = Integer.parseInt(request.getParameter("hotelId"));
             String dateRange = request.getParameter("dateRange");
             String guestsRooms = request.getParameter("guestsRooms");
+            String destination = request.getParameter("destination");
 
-            // GIỮ NGUYÊN BỐ CỤC: Lấy thông tin khách sạn gửi qua làm tiêu đề & sidebar theo layout ban đầu
+            // Lấy thông tin khách sạn gửi qua làm tiêu đề & sidebar theo layout ban đầu
             Hotel selectedHotel = dao.getHotelById(hotelId);
             request.setAttribute("selectedHotel", selectedHotel);
 
-            // Phân tích dữ liệu ngày để đưa vào câu lệnh (Giữ lại để đồng bộ thông tin thanh tìm kiếm)
+            // Phân tích dữ liệu ngày tháng
             String checkIn = "2026-06-01";
             String checkOut = "2026-06-05";
-            if (dateRange != null && dateRange.contains(" - ")) {
-                String[] dates = dateRange.split(" - ");
-                checkIn = convertDateFormat(dates[0].trim());
-                checkOut = convertDateFormat(dates[1].trim());
+            if (dateRange != null && dateRange.contains("-")) {
+                // FIX LỖI 1: Dùng regex \\s*-\\s* để cắt sạch khoảng trống thừa, chống lỗi URL mã hóa
+                String[] dates = dateRange.split("\\s*-\\s*");
+                if (dates.length == 2) {
+                    checkIn = convertDateFormat(dates[0].trim());
+                    checkOut = convertDateFormat(dates[1].trim());
+                }
             }
 
-            // TÁCH TIÊU CHÍ KHÁCH (Giữ lại để không làm lệch thông tin form nhập trên layout)
+            // TÁCH TIÊU CHÍ KHÁCH ĐOẠN CHUẨN
             int reqAdults = 2;
             int reqChildren = 0;
             if (guestsRooms != null) {
                 try {
                     String lowerGuests = guestsRooms.toLowerCase();
                     if (lowerGuests.contains("người lớn")) {
-                        String rawAdults = lowerGuests.split("người lớn")[0].replaceAll("[^0-9]", "").trim();
+                        String adultPart = lowerGuests.split("người lớn")[0];
+                        String rawAdults = adultPart.replaceAll("[^0-9]", "").trim();
                         if (!rawAdults.isEmpty()) reqAdults = Integer.parseInt(rawAdults);
                     }
+                    // FIX LỖI 2: Cắt chuẩn từ chữ "trẻ em" ngược về trước để lấy đúng số lượng trẻ em
                     if (lowerGuests.contains("trẻ em")) {
-                        String[] parts = lowerGuests.split("người lớn");
-                        if (parts.length > 1) {
-                            String rawChildren = parts[1].replaceAll("[^0-9]", "").trim();
-                            if (!rawChildren.isEmpty()) reqChildren = Integer.parseInt(rawChildren);
+                        String childPart = lowerGuests.split("trẻ em")[0];
+                        // Lấy đoạn chuỗi nằm giữa "người lớn" và "trẻ em"
+                        if (childPart.contains("người lớn")) {
+                            childPart = childPart.split("người lớn")[1];
                         }
+                        String rawChildren = childPart.replaceAll("[^0-9]", "").trim();
+                        if (!rawChildren.isEmpty()) reqChildren = Integer.parseInt(rawChildren);
                     }
                 } catch (Exception e) {
                     reqAdults = 2;
@@ -80,17 +88,16 @@ public class SearchController extends HttpServlet {
                 }
             }
 
-            // Đồng thời gán danh sách rooms bằng null để giao diện nhận biết trạng thái "Đang cập nhật"
-            List<Room> rooms = null;
+            // ĐÃ ĐỒNG BỘ: Gọi thẳng hàm lấy danh sách phòng thật từ DB
+            List<Room> rooms = dao.getAvailableRooms(hotelId, checkIn, checkOut);
 
-            // Loại bỏ thuật toán tìm phòng tối ưu vì không dùng dữ liệu phòng từ DB nữa
-
-            // Gửi toàn bộ dữ liệu cấu trúc layout sang tầng hiển thị JSP
+            // Đẩy toàn bộ thuộc tính sang room_list.jsp
             request.setAttribute("rooms", rooms);
+            request.setAttribute("destination", destination);
             request.setAttribute("dateRange", dateRange);
             request.setAttribute("guestsRooms", guestsRooms);
 
-            // Điều hướng chính xác về file room_list.jsp nằm trong thư mục webapp
+            // Điều hướng về file room_list.jsp
             request.getRequestDispatcher("room_list.jsp").forward(request, response);
         }
     }

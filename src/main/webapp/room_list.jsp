@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" isELIgnored="false" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -18,11 +19,38 @@
 
 <jsp:include page="header.jsp" />
 
+<%-- THUẬT TOÁN TỰ ĐỘNG CHIA PHÒNG (TỐI ĐA 3 NGƯỜI / PHÒNG) --%>
+<c:set var="totalGuests" value="2" />
+<c:if test="${not empty param.guestsRooms}">
+  <c:set var="lowerInput" value="${fn:toLowerCase(param.guestsRooms)}" />
+  <c:set var="adults" value="0" />
+  <c:set var="children" value="0" />
+
+  <c:if test="${fn:contains(lowerInput, 'người lớn')}">
+    <c:set var="adultPart" value="${fn:split(lowerInput, 'người lớn')[0]}" />
+    <c:set var="adults" value="${fn:trim(adultPart).replaceAll('[^0-9]', '')}" />
+  </c:if>
+
+  <c:if test="${fn:contains(lowerInput, 'trẻ em')}">
+    <c:set var="childPart" value="${fn:split(lowerInput, 'người lớn')[1]}" />
+    <c:set var="childPart" value="${fn:split(childPart, 'trẻ em')[0]}" />
+    <c:set var="children" value="${fn:trim(childPart).replaceAll('[^0-9]', '')}" />
+  </c:if>
+
+  <c:set var="adultsInt" value="${not empty adults ? adults : 0}" />
+  <c:set var="childrenInt" value="${not empty children ? children : 0}" />
+  <c:set var="totalGuests" value="${adultsInt + childrenInt}" />
+</c:if>
+
+<c:set var="calcRooms" value="${totalGuests / 3}" />
+<fmt:formatNumber var="roundedRooms" value="${calcRooms + (calcRooms % 1 == 0 ? 0 : 0.5)}" pattern="#"/>
+<c:set var="requiredRooms" value="${roundedRooms > 0 ? roundedRooms : 1}" />
+
 <div class="top-filter-wrapper">
   <form action="SearchController" method="GET" id="searchFilterForm" class="filter-form-mini">
     <div class="mini-input-box">
       <i class="fa-solid fa-magnifying-glass"></i>
-      <input type="text" name="destination" value="${param.destination}" placeholder="Bạn muốn đi đâu?">
+      <input type="text" name="destination" value="${not empty destination ? destination : param.destination}" placeholder="Bạn muốn đi đâu?">
     </div>
     <div class="mini-input-box">
       <i class="fa-solid fa-calendar-days"></i>
@@ -39,21 +67,21 @@
 <div class="main-content-container">
 
   <div class="navigation-top-bar">
-    <a href="SearchController?destination=${param.destination}&dateRange=${param.dateRange}&guestsRooms=${param.guestsRooms}" class="btn-back-to-list">
+    <a href="SearchController?destination=${not empty destination ? destination : param.destination}&dateRange=${param.dateRange}&guestsRooms=${param.guestsRooms}" class="btn-back-to-list">
       <i class="fa-solid fa-arrow-left"></i> Quay lại danh sách khách sạn
     </a>
   </div>
 
   <div class="hotel-header-info">
     <div class="hotel-title-row">
-      <h2>${not empty targetHotel.name ? targetHotel.name : 'Verdelle Premium Resort & Hotel'}</h2>
+      <h2>${not empty selectedHotel.name ? selectedHotel.name : 'Verdelle Premium Resort & Hotel'}</h2>
       <div class="stars-orange">
-        <c:forEach begin="1" end="${not empty targetHotel.stars ? targetHotel.stars : 5}">★</c:forEach>
+        <c:forEach begin="1" end="${not empty selectedHotel.stars ? selectedHotel.stars : 5}">★</c:forEach>
       </div>
     </div>
     <div class="hotel-address-row">
-      <span><i class="fa-solid fa-location-dot" style="color: #00bcd4;"></i> <span id="hotelAddressFull">Địa chỉ: ${not empty targetHotel.address ? targetHotel.address : 'Khu phố 4, Phường Hàm Tiến, Thành phố Phan Thiết, Bình Thuận'}</span></span>
-      <a href="https://www.google.com/maps/search/?api=1&query=${not empty targetHotel.name ? targetHotel.name : 'Verdelle Hotel'}+${targetHotel.address}" target="_blank" class="btn-view-map">
+      <span><i class="fa-solid fa-location-dot" style="color: #00bcd4;"></i> <span id="hotelAddressFull">Địa chỉ: ${not empty selectedHotel.address ? selectedHotel.address : 'Khu phố 4, Phường Hàm Tiến, Thành phố Phan Thiết, Bình Thuận'}</span></span>
+      <a href="https://www.google.com/maps/search/?api=1&query=${not empty selectedHotel.name ? selectedHotel.name : 'Verdelle Hotel'}+${selectedHotel.address}" target="_blank" class="btn-view-map">
         <i class="fa-solid fa-map-marked-alt"></i> Xem bản đồ lớn
       </a>
     </div>
@@ -93,7 +121,7 @@
         <div class="info-card-block">
           <div class="block-title">About us</div>
           <div class="about-text">
-            Chào mừng bạn đến với <strong>${not empty targetHotel.name ? targetHotel.name : 'Verdelle Hotel'}</strong>. Tọa lạc tại vị trí đắc địa với tầm nhìn ôm trọn bờ biển thiên nhiên hoang sơ tuyệt đẹp, khách sạn của chúng tôi mang đến một không gian nghỉ dưỡng sang trọng bậc nhất đạt chuẩn quốc tế. Hệ thống phòng nghỉ được thiết kế tinh tế, kết hợp hài hòa giữa nét kiến trúc hiện đại và sự gần gũi với thiên nhiên nhiệt đới. Hãy để chúng tôi mang lại cho bạn và gia đình một kỳ nghỉ đáng nhớ với dịch vụ tận tâm và chuyên nghiệp hàng đầu.
+            Chào mừng bạn đến với <strong>${not empty selectedHotel.name ? selectedHotel.name : 'Verdelle Hotel'}</strong>. Tọa lạc tại vị trí đắc địa với tầm nhìn ôm trọn bờ biển thiên nhiên hoang sơ tuyệt đẹp, khách sạn của chúng tôi mang đến một không gian nghỉ dưỡng sang trọng bậc nhất đạt chuẩn quốc tế. Hệ thống phòng nghỉ được thiết kế tinh tế, kết hợp hài hòa giữa nét kiến trúc hiện đại và sự gần gũi với thiên nhiên nhiệt đới. Hãy để chúng tôi mang lại cho bạn và gia đình một kỳ nghỉ đáng nhớ với dịch vụ tận tâm và chuyên nghiệp hàng đầu.
           </div>
         </div>
 
@@ -197,6 +225,7 @@
 
   <c:choose>
     <c:when test="${empty rooms}">
+      <%-- NHÁNH PHÒNG GIẢ LẬP 1 --%>
       <div class="room-card">
         <div class="room-card-img">
           <img src="https://images.unsplash.com/photo-1618773928121-c32242e63f39?w=500" alt="Deluxe Ocean">
@@ -213,14 +242,28 @@
           </div>
         </div>
         <div class="room-card-price-action">
-          <span style="font-size: 0.75rem; color: var(--sub-text);">Giá mỗi đêm</span>
-          <div style="margin: 3px 0 12px 0;">
-            <span style="font-size: 1.25rem; font-weight: bold; color: #e65100;">1.450.000 đ</span>
+          <span class="price-label">Giá tạm tính (${requiredRooms} phòng)</span>
+          <div class="price-row">
+            <span class="price-number">
+              <fmt:formatNumber value="${1450000 * requiredRooms}" type="number" groupingUsed="true"/> đ
+            </span>
+            <form action="${pageContext.request.contextPath}/BookingController" method="POST" class="booking-form-action">
+              <input type="hidden" name="roomId" value="1">
+              <input type="hidden" name="roomName" value="Phòng Deluxe Hướng Biển (Deluxe Ocean View)">
+              <input type="hidden" name="price" value="${1450000 * requiredRooms}">
+              <input type="hidden" name="hotelName" value="${selectedHotel.name}">
+              <input type="hidden" name="hotelStars" value="${selectedHotel.stars}">
+              <input type="hidden" name="hotelAddress" value="${selectedHotel.address}">
+              <input type="hidden" name="dateRange" value="${param.dateRange}">
+              <input type="hidden" name="guestsRooms" value="${param.guestsRooms}">
+              <input type="hidden" name="requiredRooms" value="${requiredRooms}">
+              <button type="submit" class="btn-book-room-primary">Đặt phòng ngay</button>
+            </form>
           </div>
-          <button class="btn-book-room">Đặt phòng ngay</button>
         </div>
       </div>
 
+      <%-- NHÁNH PHÒNG GIẢ LẬP 2 --%>
       <div class="room-card">
         <div class="room-card-img">
           <img src="https://images.unsplash.com/photo-1590490360182-c33d57733427?w=500" alt="Executive Suite">
@@ -237,15 +280,29 @@
           </div>
         </div>
         <div class="room-card-price-action">
-          <span style="font-size: 0.75rem; color: var(--sub-text);">Giá mỗi đêm</span>
-          <div style="margin: 3px 0 12px 0;">
-            <span style="font-size: 1.25rem; font-weight: bold; color: #e65100;">2.890.000 đ</span>
+          <span class="price-label">Giá tạm tính (${requiredRooms} phòng)</span>
+          <div class="price-row">
+            <span class="price-number">
+              <fmt:formatNumber value="${2890000 * requiredRooms}" type="number" groupingUsed="true"/> đ
+            </span>
+            <form action="${pageContext.request.contextPath}/BookingController" method="POST" class="booking-form-action">
+              <input type="hidden" name="roomId" value="2">
+              <input type="hidden" name="roomName" value="Phòng Executive Suite Cao Cấp">
+              <input type="hidden" name="price" value="${2890000 * requiredRooms}">
+              <input type="hidden" name="hotelName" value="${selectedHotel.name}">
+              <input type="hidden" name="hotelStars" value="${selectedHotel.stars}">
+              <input type="hidden" name="hotelAddress" value="${selectedHotel.address}">
+              <input type="hidden" name="dateRange" value="${param.dateRange}">
+              <input type="hidden" name="guestsRooms" value="${param.guestsRooms}">
+              <input type="hidden" name="requiredRooms" value="${requiredRooms}">
+              <button type="submit" class="btn-book-room-primary">Đặt phòng ngay</button>
+            </form>
           </div>
-          <button class="btn-book-room">Đặt phòng ngay</button>
         </div>
       </div>
     </c:when>
     <c:otherwise>
+      <%-- NHÁNH ĐỔ DỮ LIỆU ĐỘNG TỪ DB --%>
       <c:forEach var="r" items="${rooms}">
         <div class="room-card">
           <div class="room-card-img">
@@ -255,7 +312,9 @@
             <div>
               <h4 style="margin: 0 0 8px 0; font-size: 1.2rem; color: var(--text-color);">${r.roomTypeName}</h4>
               <p style="margin: 0 0 5px 0; font-size: 0.85rem; color: var(--sub-text);">
-                <i class="fa-solid fa-maximize"></i> Diện tích: ${r.size} m² | <i class="fa-solid fa-bed"></i> ${r.bedInfo}
+                  <%-- FIX LỖI 1: Thay đổi r.size thành r.area trùng khớp với thuộc tính trong UserDAO --%>
+                  <%-- FIX LỖI 2: Đổi r.bedInfo thành hiển thị số lượng người lớn/trẻ em tối đa để tránh lỗi trống dữ liệu --%>
+                <i class="fa-solid fa-maximize"></i> Diện tích: ${r.area} m² | <i class="fa-solid fa-users"></i> Sức chứa tối đa: ${r.maxAdults} Người lớn & ${r.maxChildren} Trẻ em
               </p>
               <p style="margin: 0; font-size: 0.85rem; color: #2e7d32;">
                 <i class="fa-solid fa-circle-check"></i> Tiện ích phòng: Điều hòa, Mini-bar, Két sắt an toàn, Máy sấy tóc.
@@ -263,15 +322,22 @@
             </div>
           </div>
           <div class="room-card-price-action">
-            <span style="font-size: 0.75rem; color: var(--sub-text);">Giá một đêm</span>
+            <span style="font-size: 0.75rem; color: var(--sub-text);">Giá phòng:</span>
             <div style="margin: 3px 0 12px 0;">
               <span style="font-size: 1.25rem; font-weight: bold; color: #e65100;">
-                <fmt:formatNumber value="${r.price}" type="number" groupingUsed="true"/> đ
+                <fmt:formatNumber value="${r.price * requiredRooms}" type="number" groupingUsed="true"/> đ
               </span>
             </div>
-            <form action="BookingController" method="POST" style="width: 100%;">
+            <form action="${pageContext.request.contextPath}/BookingController" method="POST" style="width: 100%;">
               <input type="hidden" name="roomId" value="${r.id}">
+              <input type="hidden" name="roomName" value="${r.roomTypeName}">
+              <input type="hidden" name="price" value="${r.price * requiredRooms}">
+              <input type="hidden" name="hotelName" value="${selectedHotel.name}">
+              <input type="hidden" name="hotelStars" value="${selectedHotel.stars}">
+              <input type="hidden" name="hotelAddress" value="${selectedHotel.address}">
               <input type="hidden" name="dateRange" value="${param.dateRange}">
+              <input type="hidden" name="guestsRooms" value="${param.guestsRooms}">
+              <input type="hidden" name="requiredRooms" value="${requiredRooms}">
               <button type="submit" class="btn-book-room">Đặt phòng</button>
             </form>
           </div>
@@ -297,7 +363,6 @@
   }
 
   document.addEventListener("DOMContentLoaded", function() {
-    // Mini search Tool datepicker
     const datePickerInput = document.getElementById('datePickerMini');
     if(datePickerInput){
       new Litepicker({
@@ -311,7 +376,6 @@
       });
     }
 
-    // Toggle hamburger menu
     const hamburgerBtn = document.getElementById('hamburgerBtn');
     const hamburgerMenu = document.getElementById('hamburgerMenu');
     if(hamburgerBtn && hamburgerMenu) {
@@ -324,14 +388,12 @@
       });
     }
 
-    // Smart POI List generator algorithm based on hotel location text context
     const addressElement = document.getElementById('hotelAddressFull');
     const poiContainer = document.getElementById('poiDynamicContainer');
 
     if(addressElement && poiContainer) {
       const addressText = addressElement.textContent.toLowerCase();
 
-      // Checking if context contains 'đà lạt' keyword
       if(addressText.includes("đà lạt") || addressText.includes("da lat")) {
         poiContainer.innerHTML = `
            <div class="poi-card-item">

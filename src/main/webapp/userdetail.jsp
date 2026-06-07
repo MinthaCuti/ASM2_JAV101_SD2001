@@ -11,19 +11,26 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --bg-color: #0a0a0a;
-            --card-bg: #1e1e1e;
-            --text-color: #ffffff;
-            --border-color: #2d2d2d;
+            --bg-color: #dce7f7;
+            --card-bg: #ffffff;
+            --text-color: #1a1a1a;
+            --sub-text: #64748b;
+            --border-color: #e2e8f0;
             --primary-teal: #00bcd4;
+
+            --input-bg: #f8fafc;
+            --input-readonly-bg: #f1f5f9;
         }
 
         body.dark-mode {
-            --bg-color: #343434;
+            --bg-color: #0a0a0a;
             --card-bg: #1e1e1e;
             --text-color: #e5e7eb;
             --sub-text: #888888;
-            --border-color: #333333;
+            --border-color: #2d2d2d;
+
+            --input-bg: #121212;
+            --input-readonly-bg: #141414;
         }
 
         html, body {
@@ -35,6 +42,7 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            transition: background-color 0.3s, color 0.3s;
         }
 
         /* Khung chứa bo tròn profile card */
@@ -47,6 +55,7 @@
             border: 2px solid var(--border-color);
             border-radius: 15px;
             box-sizing: border-box;
+            transition: background-color 0.3s, border-color 0.3s;
         }
 
         .detail-title {
@@ -61,12 +70,13 @@
             gap: 10px;
             border-bottom: 1px solid var(--border-color);
             padding-bottom: 12px;
+            transition: border-color 0.3s;
         }
 
         /* Grid chia layout giống Bootstrap nhưng custom mượt hơn */
         .form-grid {
             display: grid;
-            grid-template-columns: repeat(12, 12fr);
+            grid-template-columns: repeat(12, 1fr);
             gap: 20px;
         }
 
@@ -82,30 +92,33 @@
 
         .form-group label {
             font-size: 0.85rem;
-            color: #888888;
+            color:var(--sub-text);
             margin-bottom: 6px;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            transition: color 0.3s;
         }
 
         /* Định dạng ô Input Readonly cho đẹp mắt */
         .form-control {
             width: 100%;
             padding: 11px 14px;
-            background: #121212;
+            background: var(--input-bg);
             border: 1px solid var(--border-color);
             border-radius: 8px;
-            color: #ffffff;
+            color: var(--text-color);
             box-sizing: border-box;
             font-size: 0.95rem;
             font-family: inherit;
+            outline: none;
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
         }
 
         .form-control[readonly], .form-control[disabled] {
-            background: #141414;
-            color: #cccccc;
-            border-color: #222222;
+            background: var(--input-readonly-bg);
+            color: var(--sub-text);
+            border-color: var(--border-color);
             cursor: not-allowed;
         }
 

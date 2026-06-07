@@ -42,36 +42,35 @@
                 </form>
             </div>
 
-            <h2 class="profile-name"><c:out value="${sessionScope.user.fullName}" default="Verdelle Mintha" /></h2>
-            <p class="profile-username">@<c:out value="${sessionScope.user.username}" default="MintCuti" /> • she/her</p>
-            <hr class="divider">
+            <h2 class="profile-name">
+                <c:out value="${sessionScope.user.lastName}" /> <c:out value="${sessionScope.user.firstName}" />
+            </h2>
+
+            <hr class="divider" style="margin-top: 15px;">
             <button type="button" class="btn-edit-profile">Edit profile</button>
-            <div class="followers-count">
-                <i class="fa-solid fa-users"></i> N/A followers - N/A following
-            </div>
         </div>
 
         <div class="profile-main-content">
             <form action="${pageContext.request.contextPath}/profile" method="POST">
                 <div class="input-group">
                     <label class="input-label">Email</label>
-                    <input type="email" name="email" value="${not empty sessionScope.user.email ? sessionScope.user.email : 'ExampleEmail@gmail.com'}">
+                    <input type="email" name="email" value="<c:out value="${sessionScope.user.email}" default="ExampleEmail@gmail.com" />">
                 </div>
 
                 <div class="input-group">
                     <label class="input-label">Mobile</label>
-                    <input type="text" name="mobile" value="${not empty sessionScope.user.mobile ? sessionScope.user.mobile : '+84 834178906'}">
+                    <input type="text" name="mobile" value="<c:out value="${sessionScope.user.phoneNumber}" default="Chưa cập nhật" />">
                 </div>
 
-                <div class="input-group">
-                    <label class="input-label">Date of birth</label>
-                    <input type="text" name="dob" value="${not empty sessionScope.user.dob ? sessionScope.user.dob : '19/10/2008'}">
+                <div class="input-group" style="background-color: #e9ecef;">
+                    <label class="input-label">Account Role</label>
+                    <input type="text" name="role" value="<c:out value="${sessionScope.user.role}" default="Customer" />" readonly>
                 </div>
 
                 <div class="input-group password-group">
                     <label class="input-label">Password</label>
                     <div class="password-wrapper">
-                        <input type="password" id="passInput" name="password" value="${sessionScope.user.password}" readonly>
+                        <input type="password" id="passInput" name="password" value="<c:out value="${sessionScope.user.password}" />" readonly>
                         <a href="#" class="edit-password-link" onclick="enablePassword(event)">Edit</a>
                     </div>
                 </div>
@@ -80,7 +79,7 @@
                     <span class="social-title">Social Networks</span>
                     <div class="social-item">
                         <i class="fa-brands fa-facebook facebook-icon"></i>
-                        <span class="social-text">Facebook.com/<c:out value="${sessionScope.user.facebook}" default="VerdelleMintha" /></span>
+                        <span class="social-text">Facebook.com/<c:out value="${sessionScope.user.firstName}" default="VerdelleMintha" /></span>
                         <i class="fa-solid fa-circle-check verified-icon"></i>
                     </div>
                     <div class="social-item">
@@ -108,17 +107,6 @@
 <jsp:include page="footer.jsp" />
 
 <script>
-    const hamburgerBtn = document.getElementById('hamburgerBtn');
-    const hamburgerMenu = document.getElementById('hamburgerMenu');
-    if(hamburgerBtn && hamburgerMenu) {
-        hamburgerBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            hamburgerMenu.classList.toggle('show');
-        });
-        document.addEventListener('click', function() {
-            hamburgerMenu.classList.remove('show');
-        });
-    }
     function enablePassword(e) {
         e.preventDefault();
         var passInput = document.getElementById("passInput");
@@ -137,59 +125,39 @@
             var reader = new FileReader();
             reader.onload = function(e) {
                 document.getElementById('avatarPreview').setAttribute('src', e.target.result);
-                document.getElementById('navAvatarPreview').setAttribute('src', e.target.result);
+                if(document.getElementById('navAvatarPreview')) {
+                    document.getElementById('navAvatarPreview').setAttribute('src', e.target.result);
+                }
             }
             reader.readAsDataURL(file);
             document.getElementById('avatarForm').submit();
         }
     }
 
-    function triggerBannerUpload() {
-        document.getElementById('bannerInput').click();
-    }
-    function previewAndSubmitBanner() {
-        var fileInput = document.getElementById('bannerInput');
-        var file = fileInput.files[0];
-        if (file) {
-            var reader = new FileReader();
-            reader.onload = function(e) {
-                document.getElementById('bannerPreview').setAttribute('src', e.target.result);
-            }
-            reader.readAsDataURL(file);
-            document.getElementById('bannerForm').submit();
-        }
-    }
+    // Tự động đóng/mở Hamburger Menu và Dark Mode
     document.addEventListener("DOMContentLoaded", function() {
         const hamburgerBtn = document.getElementById('hamburgerBtn');
         const hamburgerMenu = document.getElementById('hamburgerMenu');
         const themeToggleBtn = document.getElementById('themeToggleBtn');
         const toggleIcon = document.getElementById('toggleIcon');
 
-        // 1. Logic đóng/mở Hamburger Menu
         if (hamburgerBtn && hamburgerMenu) {
             hamburgerBtn.addEventListener('click', function(e) {
-                e.stopPropagation(); // Ngăn sự kiện click bị trôi ra ngoài
+                e.stopPropagation();
                 hamburgerMenu.classList.toggle('show');
                 hamburgerMenu.classList.toggle('active');
+                hamburgerMenu.style.display = hamburgerMenu.classList.contains('show') ? 'block' : 'none';
+            });
 
-                // Dự phòng nếu CSS của cậu dùng thuộc tính display trực tiếp để ẩn hiện
-                if(hamburgerMenu.classList.contains('show') || hamburgerMenu.classList.contains('active')) {
-                    hamburgerMenu.style.display = 'block';
-                } else {
+            document.addEventListener('click', function() {
+                if(hamburgerMenu) {
+                    hamburgerMenu.classList.remove('show', 'active');
                     hamburgerMenu.style.display = 'none';
                 }
             });
-
-            // Bấm ra ngoài vùng menu thì tự động đóng menu lại
-            document.addEventListener('click', function() {
-                hamburgerMenu.classList.remove('show', 'active');
-                hamburgerMenu.style.display = 'none';
-            });
         }
 
-        // 2. Logic Chế độ ban đêm (Dark Mode) toàn cục
         if (themeToggleBtn) {
-            // Kiểm tra xem trạng thái trước đó người dùng có bật dark-mode không
             if (localStorage.getItem('theme') === 'dark') {
                 document.body.classList.add('dark-mode');
                 if(toggleIcon) toggleIcon.className = "fa-solid fa-toggle-on";
@@ -209,6 +177,22 @@
             });
         }
     });
+
+    function triggerBannerUpload() {
+        document.getElementById('bannerInput').click();
+    }
+    function previewAndSubmitBanner() {
+        var fileInput = document.getElementById('bannerInput');
+        var file = fileInput.files[0];
+        if (file) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('bannerPreview').setAttribute('src', e.target.result);
+            }
+            reader.readAsDataURL(file);
+            document.getElementById('bannerForm').submit();
+        }
+    }
 </script>
 
 <c:if test="${not empty sessionScope.updateStatus}">
@@ -218,7 +202,6 @@
     </div>
 
     <script>
-        // Tự động tạo hiệu ứng mờ dần và xóa hộp thông báo sau 3 giây
         setTimeout(function() {
             var toast = document.getElementById('toastNotice');
             if (toast) {
@@ -228,7 +211,6 @@
             }
         }, 3000);
     </script>
-
     <c:remove var="updateStatus" scope="session" />
 </c:if>
 </body>

@@ -25,6 +25,52 @@ body {
     transition: background-color 0.3s, color 0.3s;
 }
 
+body.dark-mode .dropdown-item:hover {
+    background-color: #2a2a2a !important;
+    cursor: pointer;
+}
+
+body.dark-mode .dropdown-item:hover h5 {
+    color: #00bcd4 !important;
+}
+
+body.dark-mode .dropdown-item:hover p {
+    color: #ffffff !important;
+}
+body.dark-mode .calendar-dropdown,
+body.dark-mode .datepicker,
+body.dark-mode .ui-datepicker-calendar,
+body.dark-mode [class*="datepicker-dropdown"] {
+    background-color: var(--card-bg) !important;
+    background: var(--card-bg) !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--text-color) !important;
+}
+
+/* Style lại các thẻ chọn Tháng/Năm bên trong lịch */
+body.dark-mode .datepicker select,
+body.dark-mode .calendar-dropdown select {
+    background-color: var(--search-bg) !important;
+    color: var(--text-color) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+/* Định dạng chữ số ngày ở trạng thái bình thường */
+body.dark-mode .calendar-day,
+body.dark-mode .datepicker table tr td,
+body.dark-mode .ui-state-default {
+    color: var(--text-color) !important;
+    background: transparent !important;
+    transition: all 0.2s ease;
+}
+
+body.dark-mode .calendar-day:hover,
+body.dark-mode .datepicker table tr td:hover,
+body.dark-mode .ui-state-default:hover {
+    background-color: #00bcd4 !important;
+    color: #ffffff !important;
+}
+
 /* Lớp phủ màn hình chính */
 .overlay {
     background: var(--overlay-color);

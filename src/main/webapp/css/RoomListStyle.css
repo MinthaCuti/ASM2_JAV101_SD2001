@@ -582,3 +582,86 @@ body.dark-mode .line-p { background: #444; }
     align-items: center;
     border-top: 3px solid #00bcd4;
 }
+/* --- Cấu trúc phụ trợ cho khu vực giá --- */
+.price-label {
+    font-size: 0.75rem;
+    color: var(--sub-text);
+    display: block;
+}
+.price-row {
+    margin: 3px 0 12px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.price-number {
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: #e65100;
+}
+.booking-form-action {
+    width: 100%;
+}
+
+/* ===================================================
+   NÚT ĐẶT PHÒNG NGAY (CHẾ ĐỘ SÁNG - LIGHT MODE)
+   =================================================== */
+.btn-book-room-primary {
+    width: 100%;
+    padding: 10px 16px;
+    background-color: #e65100; /* Giữ màu cam chủ đạo của cậu */
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-block;
+    text-align: center;
+    transition: all 0.25s ease-in-out;
+    box-shadow: 0 4px 6px rgba(230, 81, 0, 0.15);
+}
+
+/* Hiệu ứng Hover chế độ sáng */
+.btn-book-room-primary:hover {
+    background-color: #ff6d00; /* Cam sáng ngọt ngào và bắt mắt hơn */
+    transform: translateY(-2px); /* Nút nhấc lên nhẹ nhàng */
+    box-shadow: 0 6px 12px rgba(230, 81, 0, 0.3);
+}
+
+/* Hiệu ứng khi Click chuột */
+.btn-book-room-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 3px 6px rgba(230, 81, 0, 0.2);
+}
+
+
+/* ===================================================
+   CHẾ ĐỘ TỐI (DARK MODE)
+   =================================================== */
+
+/* Trường hợp 1: Nếu cậu dùng class .dark-mode hoặc .dark ở thẻ <body> / <html> */
+body.dark-mode .btn-book-room-primary {
+    background-color: #ff7043; /* Màu cam san hô dịu mắt, không bị chói trong đêm */
+    color: #121212; /* Chữ tối để tương phản rõ ràng trên nền nút sáng */
+    box-shadow: 0 4px 10px rgba(255, 112, 67, 0.2);
+}
+
+body.dark-mode .btn-book-room-primary:hover {
+    background-color: #ff8a65; /* Sáng hơn một chút khi hover ở chế độ tối */
+    box-shadow: 0 6px 15px rgba(255, 112, 67, 0.4);
+}
+
+/* Trường hợp 2: Nếu cậu dùng chế độ tối tự động theo hệ thống máy tính */
+@media (prefers-color-scheme: dark) {
+    /* Chỉ áp dụng nếu body không bị ép class .light-mode */
+    body:not(.light-mode) .btn-book-room-primary {
+        background-color: #ff7043;
+        color: #121212;
+        box-shadow: 0 4px 10px rgba(255, 112, 67, 0.2);
+    }
+    body:not(.light-mode) .btn-book-room-primary:hover {
+        background-color: #ff8a65;
+        box-shadow: 0 6px 15px rgba(255, 112, 67, 0.4);
+    }
+}

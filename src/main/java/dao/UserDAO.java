@@ -97,8 +97,14 @@ public class UserDAO {
              PreparedStatement ps = conn.prepareStatement(query)) {
 
             ps.setInt(1, hotelId);
-            ps.setDate(2, Date.valueOf(checkIn));
-            ps.setDate(3, Date.valueOf(checkOut));
+
+            try {
+                ps.setDate(2, java.sql.Date.valueOf(checkIn));
+                ps.setDate(3, java.sql.Date.valueOf(checkOut));
+            } catch (Exception eDate) {
+                ps.setDate(2, java.sql.Date.valueOf("2026-06-01"));
+                ps.setDate(3, java.sql.Date.valueOf("2026-06-05"));
+            }
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -108,54 +114,62 @@ public class UserDAO {
                     r.setId(roomIdFromDB);
                     r.setRoomId(roomIdFromDB);
                     r.setHotelId(rs.getInt("HotelID"));
+                    r.setPrice(rs.getDouble("Price")); // Lấy giá chuẩn từ DB
 
-                    // BỌC BẢO VỆ CỘT TÊN PHÒNG: Thử lấy RoomName, nếu lỗi thì thử lấy cột khác hoặc gán mặc định
-                    String finalRoomName = "Phòng Deluxe Hướng Biển";
+                    // Đọc cột RoomType từ SQL của Mint làm tên hiển thị
+                    String roomTypeFromDB = "Phòng Tiêu Chuẩn";
                     try {
-                        finalRoomName = rs.getNString("RoomName");
-                    } catch (Exception e1) {
-                        try {
-                            finalRoomName = rs.getNString("RoomType"); // Thử cột dự phòng 1
-                        } catch (Exception e2) {
-                            try {
-                                finalRoomName = rs.getNString("RoomTypeName"); // Thử cột dự phòng 2
-                            } catch (Exception e3) {
-                                // Giữ nguyên giá trị mặc định nếu tất cả các cột trên đều không có trong DB
-                            }
+                        if (rs.getNString("RoomType") != null) {
+                            roomTypeFromDB = rs.getNString("RoomType");
                         }
+                    } catch (Exception eName) {
+                        try {
+                            roomTypeFromDB = rs.getNString("RoomName");
+                        } catch (Exception eName2) {}
                     }
-                    r.setRoomName(finalRoomName);
-                    r.setRoomTypeName(finalRoomName);
+                    r.setRoomName(roomTypeFromDB);
+                    r.setRoomTypeName(roomTypeFromDB);
 
-                    // Bọc bảo vệ cột mô tả
+                    // BẢO VỆ: Nếu DB chưa có cột MaxAdults thì mặc định là 2
                     try {
-                        r.setDescription(rs.getString("Description"));
+                        r.setMaxAdults(rs.getInt("MaxAdults"));
                     } catch (Exception e) {
-                        r.setDescription("Phòng nghỉ cao cấp đầy đủ tiện nghi, không gian thoáng mát, view đẹp.");
+                        r.setMaxAdults(2);
                     }
 
-                    r.setPrice(rs.getDouble("Price"));
-                    r.setMaxAdults(rs.getInt("MaxAdults"));
-                    r.setMaxChildren(rs.getInt("MaxChildren"));
+                    // BẢO VỆ: Nếu DB chưa có cột MaxChildren thì mặc định là 1
+                    try {
+                        r.setMaxChildren(rs.getInt("MaxChildren"));
+                    } catch (Exception e) {
+                        r.setMaxChildren(1);
+                    }
 
-                    // Bọc bảo vệ cột diện tích
+                    // BẢO VỆ: Nếu DB chưa có cột Area thì mặc định là 30m²
                     try {
                         r.setArea(rs.getInt("Area"));
                     } catch (Exception e) {
-                        r.setArea(35);
+                        r.setArea(30);
                     }
 
-                    // Bọc bảo vệ cột ảnh
+                    // BẢO VỆ: Nếu DB chưa có cột Description
+                    try {
+                        r.setDescription(rs.getString("Description"));
+                    } catch (Exception e) {
+                        r.setDescription("Phòng nghỉ rộng rãi, đầy đủ tiện nghi, mang lại cảm giác ấm cúng.");
+                    }
+
+                    // BẢO VỆ: Nếu DB chưa có cột Image thì tự lấy ảnh ngẫu nhiên tương ứng với ID phòng cho đẹp mắt
                     try {
                         String img = rs.getString("Image");
                         r.setImage(img != null && !img.isEmpty() ? img : "https://images.unsplash.com/photo-1618773928121-c32242e63f39?w=500");
                     } catch (Exception e) {
-                        r.setImage("https://images.unsplash.com/photo-1618773928121-c32242e63f39?w=500");
+                        // Tạo ảnh thay đổi theo ID phòng cho sinh động sinh viên
+                        if (roomIdFromDB % 2 == 0) {
+                            r.setImage("https://images.unsplash.com/photo-1590490360182-c33d57733427?w=500");
+                        } else {
+                            r.setImage("https://images.unsplash.com/photo-1618773928121-c32242e63f39?w=500");
+                        }
                     }
-
-                    r.setHasBathtub(true);
-                    r.setHasBreakfast(true);
-                    r.setRecommended(false);
 
                     list.add(r);
                 }
@@ -210,14 +224,12 @@ public class UserDAO {
     public String getRoleByPhone(String phone) {
         String role = "Customer"; // Mặc định nếu có lỗi thì tài khoản là Customer cho an toàn
         String sql = "SELECT Role FROM Users WHERE PhoneNumber = ?";
-
-        try (Connection conn = DBConnect.getConnection(); // Cậu thay bằng đoạn lấy Connection chuẩn của nhóm cậu nhé, ví dụ: DBContext.makeConnection() hoặc từ class của cậu
+        try (Connection conn = DBConnect.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-
             ps.setString(1, phone);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    role = rs.getString("Role").trim(); // Lấy giá trị cột Role từ Database
+                    role = rs.getString("Role").trim();
                 }
             }
         } catch (Exception e) {
@@ -225,6 +237,28 @@ public class UserDAO {
         }
         return role;
     }
+
+    public String getEmailByPhone(String phone) {
+        String email = "";
+        // Thay đổi tên bảng và tên cột cho đúng với Database (SQL Server/MySQL) của các bạn nhé
+        String query = "SELECT Email FROM Users WHERE PhoneNumber = ?";
+
+        // Đoạn này dùng kết nối DB hiện tại của các bạn (ví dụ dùng Connection, PreparedStatement)
+        try {
+            // Giả sử các bạn có hàm lấy connection là getConnection() hoặc từ một class DBContext
+            java.sql.Connection conn = new context.DBConnect().getConnection(); // Sửa lại cho đúng cách gọi DB của bạn
+            java.sql.PreparedStatement ps = conn.prepareStatement(query);
+            ps.setString(1, phone);
+            java.sql.ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                email = rs.getString("email");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return email;
+    }
+
     // Kiếm tra xem số điện thoại có tồn tại trong hệ thống không
     public boolean checkPhoneExists(String phoneNumber) {
         String query = "SELECT * FROM Users WHERE PhoneNumber = ?";
@@ -255,44 +289,73 @@ public class UserDAO {
         return false;
     }
 
+    // Kiểm tra xem Email Google đăng nhập đã tồn tại trong DB chưa
+    public boolean checkEmailExists(String email) {
+        String query = "SELECT * FROM Users WHERE Email = ?";
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement ps = conn.prepareStatement(query)) {
+            ps.setString(1, email);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next(); // Trả về true nếu email đã có tài khoản liên kết
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
 
+    // Lấy số điện thoại tương ứng với Email (Dùng để nạp Session khi tự động đăng nhập)
+    public String getPhoneByEmail(String email) {
+        String query = "SELECT PhoneNumber FROM Users WHERE Email = ?";
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement ps = conn.prepareStatement(query)) {
+            ps.setString(1, email);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("PhoneNumber");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return ""; // Trả về chuỗi rỗng nếu không tìm thấy dữ liệu liên kết
+    }
 
 
     public List<User> findAll() {
-        jakarta.persistence.EntityManager em = Utils.JpaUtils.getEntityManager();
+        EntityManager entityManager = JpaUtils.getEntityManager();
         try {
-            jakarta.persistence.TypedQuery<User> query = em.createQuery("SELECT u FROM User u", User.class);
+            TypedQuery<User> query = entityManager.createQuery("SELECT u FROM User u", User.class);
             return query.getResultList();
         } catch (Exception e) {
             e.printStackTrace();
             return new ArrayList<>();
         } finally {
-            em.close();
+            entityManager.close();
         }
     }
-    private EntityManager em = JpaUtils.getEntityManager();
+
     public List<User> getAll() {
-        EntityManager em = JpaUtils.getEntityManager();
+        EntityManager entityManager = JpaUtils.getEntityManager();
         try {
             String jpql = "SELECT u FROM User u WHERE u.isActive = true";
-            return em.createQuery(jpql, User.class).getResultList();
+            return entityManager.createQuery(jpql, User.class).getResultList();
         } finally {
-            em.close(); // Đóng kết nối an toàn
+            entityManager.close();
         }
     }
 
     public User findById(int id){
-        EntityManager em = JpaUtils.getEntityManager();
-        try
-        {
-            String sql = "SELECT u FROM User u WHERE u.id = :id and  u.isActive = true";
-            TypedQuery<User> query = em.createQuery(sql, User.class);
+        EntityManager entityManager = JpaUtils.getEntityManager();
+        try {
+            String sql = "SELECT u FROM User u WHERE u.id = :id and u.isActive = true";
+            TypedQuery<User> query = entityManager.createQuery(sql, User.class);
             query.setParameter("id", id);
             return query.getSingleResult();
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            em.close();
+            entityManager.close();
         }
         return null;
     }
@@ -300,7 +363,7 @@ public class UserDAO {
         EntityManager em = JpaUtils.getEntityManager();
         try {
             em.getTransaction().begin();
-            em.merge(user); // Merge dùng để cập nhật thực thể đã tồn tại xuống DB
+            em.merge(user);
             em.getTransaction().commit();
         } catch (Exception e) {
             if (em.getTransaction().isActive()) {
@@ -327,6 +390,26 @@ public class UserDAO {
                 em.getTransaction().rollback();
             }
             e.printStackTrace();
+        } finally {
+            em.close();
+        }
+    }
+
+    // Hàm lấy đầy đủ Object User bằng số điện thoại (Dùng JPA)
+    public User getUserByPhone(String phone) {
+        jakarta.persistence.EntityManager em = Utils.JpaUtils.getEntityManager();
+        try {
+            // Câu lệnh JPQL tìm User theo số điện thoại
+            String jpql = "SELECT u FROM User u WHERE u.phoneNumber = :phone";
+            jakarta.persistence.TypedQuery<User> query = em.createQuery(jpql, User.class);
+            query.setParameter("phone", phone);
+
+            java.util.List<User> list = query.getResultList();
+            // Nếu tìm thấy thì trả về phần tử đầu tiên, không thì trả về null
+            return list.isEmpty() ? null : list.get(0);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
         } finally {
             em.close();
         }

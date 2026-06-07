@@ -1,5 +1,6 @@
 package controller;
 
+import model.User;
 import dao.UserDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -46,6 +47,10 @@ public class LoginController extends HttpServlet {
         // Lấy trực tiếp FirstName từ hàm trong UserDAO để hiển thị câu chào mừng
         String firstName = userDAO.getFirstNameByPhone(phone);
         session.setAttribute("firstName", firstName);
+
+        // Lấy trực tiếp Email trong UserDAO
+        String email = userDAO.getEmailByPhone(phone);
+        session.setAttribute("userEmail", email);
 
 
         String role = userDAO.getRoleByPhone(phone);

@@ -7,6 +7,51 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/FooterStyle.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* CSS MODAL OTP XINH XẮN */
+        .otp-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6); z-index: 9999;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .otp-box {
+            background: #fff; padding: 30px; border-radius: 15px; width: 380px;
+            text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            animation: fadeIn 0.3s ease; color: #333;
+        }
+        .otp-box h3 { color: #0097a7; margin-bottom: 15px; font-size: 1.4rem; }
+        .otp-input-container input {
+            width: 85%;
+            padding: 12px 10px;
+            font-size: 1.1rem; /* Thu nhỏ cỡ chữ lại cho thanh thoát */
+            text-align: center;
+            letter-spacing: 3px; /* Khoảng cách giữa các số vừa phải, dễ nhìn */
+            border: 1.5px solid #0097a7;
+            border-radius: 8px;
+            outline: none;
+            margin: 15px 0;
+            box-sizing: border-box;
+        }
+        .otp-input-container input:focus {
+            border-color: #007a87;
+            box-shadow: 0 0 5px rgba(0, 151, 167, 0.2);
+        }
+        .timer-text { font-size: 0.9rem; color: #666; margin-bottom: 10px; }
+        #timer { color: #ff4d4d; font-weight: bold; }
+        .btn-verify {
+            background: #0097a7; color: #fff; border: none; padding: 10px 20px;
+            font-weight: bold; border-radius: 5px; cursor: pointer; width: 100%; margin-top: 10px;
+        }
+        .btn-resend {
+            background: none; border: none; color: #0097a7; cursor: pointer;
+            font-size: 0.85rem; text-decoration: underline; margin-bottom: 15px;
+        }
+        .btn-resend:disabled { color: #ccc; cursor: not-allowed; text-decoration: none; }
+        .btn-cancel-modal {
+            display: block; margin-top: 10px; font-size: 0.85rem; color: #888; text-decoration: none;
+        }
+        @keyframes fadeIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    </style>
 </head>
 <body> <div class="overlay">
 
@@ -94,6 +139,84 @@
         </div>
     </main>
     <jsp:include page="footer.jsp" />
+    <div id="otpModal" class="otp-modal" style="${openOTPModal ? 'display: flex;' : 'display: none;'}">
+        <div class="otp-box">
+            <h3><i class="fa-solid fa-shield-halved"></i> Xác thực Email</h3>
+            <p>Hệ thống đã gửi mã OTP gồm 6 chữ số đến địa chỉ email: <br><strong style="color: #0097a7;">${sessionScope.tempEmail}</strong></p>
+
+            <form action="VerifyOTPController" method="POST">
+                <div class="otp-input-container">
+                    <input type="text" name="otpInput" maxlength="6" placeholder="Nhập 6 số tại đây" required autocomplete="off">
+                </div>
+
+                <div id="countdown-timer" class="timer-text">Mã hiệu lực còn: <span id="timer">120</span>s</div>
+
+                <button type="button" id="btnResend" class="btn-resend" onclick="resendOTP()">Gửi lại mã</button>
+
+                <div class="modal-buttons">
+                    <button type="submit" class="btn-verify">XÁC NHẬN</button>
+                    <a href="signup.jsp" class="btn-cancel-modal">Hủy bỏ</a>
+                </div>
+            </form>
+
+            <c:if test="${not empty otpError}">
+                <p style="color: #ff4d4d; font-size: 0.85rem; margin-top: 10px; font-weight: bold;">${otpError}</p>
+            </c:if>
+        </div>
+    </div>
 </div>
+<script>
+    let countdownInterval; // Biến toàn cục để quản lý bộ đếm thời gian
+
+    // Nếu popup đang mở thì tự động kích hoạt đếm ngược 120s cho mã đầu tiên
+    if (document.getElementById('otpModal').style.display === 'flex') {
+        startCountdown(120);
+    }
+
+    function startCountdown(seconds) {
+        // Cực kỳ quan trọng: Xóa bộ đếm cũ đang chạy (nếu có) trước khi bắt đầu đếm chu kỳ mới
+        if (countdownInterval) {
+            clearInterval(countdownInterval);
+        }
+
+        let timeLeft = seconds;
+        const timerSpan = document.getElementById('timer');
+        const timerDiv = document.getElementById('countdown-timer');
+
+        // Reset lại nội dung hiển thị gốc ban đầu
+        timerDiv.innerHTML = 'Mã hiệu lực còn: <span id="timer">' + timeLeft + '</span>s';
+
+        countdownInterval = setInterval(() => {
+            timeLeft--;
+
+            // Cập nhật lại số giây trên giao diện
+            const currentTimerSpan = document.getElementById('timer');
+            if (currentTimerSpan) {
+                currentTimerSpan.textContent = timeLeft;
+            }
+
+            // Khi hết 2 phút của mã hiện tại
+            if (timeLeft <= 0) {
+                clearInterval(countdownInterval);
+                timerDiv.innerHTML = "<span style='color: #ff4d4d;'>⚠️ Mã OTP này đã hết hạn! Vui lòng ấn Gửi lại mã.</span>";
+            }
+        }, 1000);
+    }
+
+    // Hàm xử lý gửi lại mã ngay lập tức khi bấm nút
+    function resendOTP() {
+        fetch('ResendOTPController', { method: 'POST' })
+            .then(response => response.text())
+            .then(data => {
+                if (data === "success") {
+                    alert("✉️ Mã OTP mới đã được gửi thành công vào Email của bạn!");
+                    startCountdown(120); // Reset và chạy lại đồng hồ đếm ngược 2 phút từ đầu
+                } else {
+                    alert("❌ Gửi lại mã thất bại! Vui lòng thử lại sau.");
+                }
+            })
+            .catch(err => alert("Có lỗi xảy ra trong quá trình gửi lại mã."));
+    }
+</script>
 </body>
 </html>
