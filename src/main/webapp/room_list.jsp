@@ -19,6 +19,16 @@
 
 <jsp:include page="header.jsp" />
 
+<c:set var="requiredRooms" value="1" />
+<c:if test="${not empty param.guestsRooms}">
+  <%-- Tách lấy từ đầu tiên trước khoảng trắng (chính là con số) --%>
+  <c:set var="roomPart" value="${fn:split(param.guestsRooms, ' ')[0]}" />
+  <c:set var="cleanedRooms" value="${fn:trim(roomPart).replaceAll('[^0-9]', '')}" />
+  <c:if test="${not empty cleanedRooms}">
+    <c:set var="requiredRooms" value="${cleanedRooms}" />
+  </c:if>
+</c:if>
+
 <%-- THUẬT TOÁN TỰ ĐỘNG CHIA PHÒNG (TỐI ĐA 3 NGƯỜI / PHÒNG) --%>
 <c:set var="totalGuests" value="2" />
 <c:if test="${not empty param.guestsRooms}">

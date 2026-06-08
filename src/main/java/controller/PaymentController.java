@@ -29,24 +29,27 @@ public class PaymentController extends HttpServlet {
         String customerPhone = request.getParameter("customerPhone");
 
         // 3. Logic xử lý tính toán giá tiền & Giả lập thông tin hạng phòng
-        String hotelName = "Verdelle Premium Resort & Hotel";
-        String roomName = "Phòng Tiêu Chuẩn Luxury";
-        long basePrice = 1450000;
-        int totalNights = 4;
+        String hotelName = request.getParameter("hotelName");
+        String roomName = request.getParameter("roomName");
 
-        if ("1".equals(roomId)) {
-            roomName = "Phòng Deluxe Hướng Biển (Deluxe Ocean View)";
-            basePrice = 1450000;
-        } else if ("2".equals(roomId)) {
-            roomName = "Phòng Executive Suite Cao Cấp";
-            basePrice = 2890000;
+        long basePrice = 1;
+        int totalNights = 1;
+        int requiredRooms = 1;
+
+        try {
+            basePrice = Long.parseLong(request.getParameter("basePrice"));
+            totalNights = Integer.parseInt(request.getParameter("totalNights"));
+            requiredRooms = Integer.parseInt(request.getParameter("requiredRooms"));
+        } catch (Exception e) {
+            // Xử lý exception nếu có lỗi parse số
         }
 
-        // Thực hiện tính toán chi phí tài chính chuẩn theo Layout thiết kế
-        long rawTotal = basePrice * totalNights;              // Tổng tiền gốc chưa giảm
-        long discount = (long) (rawTotal * 0.30);             // Khấu trừ chương trình giảm giá 30%
-        long taxAndFees = (long) ((rawTotal - discount) * 0.10); // Thuế VAT và phí dịch vụ tính 10%
-        long finalPrice = (rawTotal - discount) + taxAndFees;  // Giá chốt đơn cuối cùng xuất hóa đơn
+// Công thức chốt sổ
+        long rawTotal = basePrice * requiredRooms * totalNights; // Tổng tiền phòng thực tế
+        long discount = 0; // Cậu có thể xử lý mã giảm giá ở đây nếu có
+
+        long taxAndFees = (long) (rawTotal * 0.1); // Thuế 10% dựa trên tổng tiền thực tế từ DB
+        long finalPrice = (rawTotal - discount) + taxAndFees; // Giá chốt đơn cuối cùng xuất hóa đơn
 
         // 4. Đẩy toàn bộ thuộc tính dữ liệu đóng gói sang Request Scope
         session.setAttribute("roomId", roomId);
