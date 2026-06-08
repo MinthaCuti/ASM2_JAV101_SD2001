@@ -31,6 +31,7 @@ public class PaymentController extends HttpServlet {
         // 3. Logic xử lý tính toán giá tiền & Giả lập thông tin hạng phòng
         String hotelName = request.getParameter("hotelName");
         String roomName = request.getParameter("roomName");
+        String voucherCode = request.getParameter("voucherCode");
 
         long basePrice = 1;
         int totalNights = 1;
@@ -45,11 +46,17 @@ public class PaymentController extends HttpServlet {
         }
 
 // Công thức chốt sổ
-        long rawTotal = basePrice * requiredRooms * totalNights; // Tổng tiền phòng thực tế
-        long discount = 0; // Cậu có thể xử lý mã giảm giá ở đây nếu có
+        long rawTotal = basePrice * requiredRooms * totalNights;
+        long taxAndFees = (long) (rawTotal * 0.1);
+        long priceWithVAT = rawTotal + taxAndFees; // Đây là giá 2.200.000 đ
 
-        long taxAndFees = (long) (rawTotal * 0.1); // Thuế 10% dựa trên tổng tiền thực tế từ DB
-        long finalPrice = (rawTotal - discount) + taxAndFees; // Giá chốt đơn cuối cùng xuất hóa đơn
+        long discount = 0;
+        // Kiểm tra nếu có mã NEWBIE thì giảm 15% trên giá ĐÃ CÓ VAT
+        if (voucherCode != null && voucherCode.equals("NEWBIE")) {
+            discount = (long) (priceWithVAT * 0.15);
+        }
+
+        long finalPrice = priceWithVAT - discount;
 
         // 4. Đẩy toàn bộ thuộc tính dữ liệu đóng gói sang Request Scope
         session.setAttribute("roomId", roomId);
@@ -61,8 +68,12 @@ public class PaymentController extends HttpServlet {
         session.setAttribute("hotelName", hotelName);
         session.setAttribute("roomName", roomName);
         session.setAttribute("totalNights", totalNights);
+        session.setAttribute("requiredRooms", requiredRooms);
+        session.setAttribute("voucherCode", voucherCode);
+
         session.setAttribute("basePrice", basePrice);
         session.setAttribute("rawTotal", rawTotal);
+        session.setAttribute("priceWithVAT", priceWithVAT);
         session.setAttribute("discount", discount);
         session.setAttribute("taxAndFees", taxAndFees);
         session.setAttribute("finalPrice", finalPrice); // Giá tiền quyết định hiển thị ở đây

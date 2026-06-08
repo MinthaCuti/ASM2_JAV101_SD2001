@@ -300,3 +300,52 @@ body.dark-mode .step-item.active .step-number {
     display: flex;
     gap: 8px;
 }
+.voucher-section {
+    background: rgba(230, 81, 0, 0.04);
+    border: 1px dashed #e65100;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 15px;
+}
+.voucher-title {
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: #e65100;
+    margin: 0 0 8px 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.voucher-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.voucher-item:hover {
+    border-color: #e65100;
+}
+.voucher-info {
+    display: flex;
+    flex-direction: column;
+}
+.voucher-code {
+    font-weight: bold;
+    font-size: 0.85rem;
+    color: var(--text-color);
+}
+.voucher-desc {
+    font-size: 0.75rem;
+    color: var(--sub-text);
+}
+.price-strike {
+    text-decoration: line-through;
+    color: var(--sub-text);
+    font-size: 1.1rem;
+    margin-right: 8px;
+}

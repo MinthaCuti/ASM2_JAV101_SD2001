@@ -345,46 +345,74 @@
                 </p>
                 <ul style="padding-left: 15px; margin: 0; font-size: 0.85rem; color: var(--sub-text); line-height: 1.6;">
                     <li>${not empty totalNights ? totalNights : 'N/A'} đêm</li>
-                    <li>1 x Phòng "${not empty roomName ? roomName : 'N/A'}"</li>
+                    <li>${not empty requiredRooms ? requiredRooms : '1'} x Phòng "${not empty roomName ? roomName : 'N/A'}"</li>
                 </ul>
             </div>
 
-            <div style="padding: 12px 15px; background: rgba(76, 175, 80, 0.06); border: 1px solid rgba(76, 175, 80, 0.15); border-radius: 8px; margin-bottom: 20px;">
-                <div style="font-size: 0.85rem; font-weight: bold; color: #4caf50; margin-bottom: 2px;">
-                    <i class="fa-solid fa-thumbs-up"></i> Lựa chọn khách sạn tốt nhất
+            <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                <div style="padding: 12px 15px; background: rgba(76, 175, 80, 0.06); border: 1px solid rgba(76, 175, 80, 0.15); border-radius: 8px; margin-bottom: 15px;">
+                    <div style="font-size: 0.85rem; font-weight: bold; color: #4caf50; margin-bottom: 2px;">
+                        <i class="fa-solid fa-thumbs-up"></i> Lựa chọn khách sạn tốt nhất
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--sub-text);">
+                        Đánh giá trung bình của khách là <strong>8,5</strong>
+                    </div>
                 </div>
-                <div style="font-size: 0.8rem; color: var(--sub-text);">
-                    Đánh giá trung bình của khách là <strong>8,5</strong>
-                </div>
+
+                <c:if test="${discount > 0}">
+                    <div style="font-size:0.85rem; color:#d32f2f; font-weight:bold; text-align:center; padding: 10px; background: #ffebee; border-radius: 8px;">
+                        <i class="fa-solid fa-tags"></i> Khớp giá ưu đãi! Quý khách tiết kiệm <fmt:formatNumber value="${discount}" type="number" groupingUsed="true"/> đ
+                    </div>
+                </c:if>
             </div>
 
-            <p style="font-size:0.8rem; color:#4caf50; font-weight:500; margin-bottom:20px; text-align:center;">
-                Chúng tôi khớp giá. Quý khách tiết kiệm được <fmt:formatNumber value="${discount}" type="number" groupingUsed="true"/> đ với đơn này!
-            </p>
-
             <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; margin-bottom: 20px;">
-                <div class="discount-badge"><i class="fa-solid fa-tag"></i> Giảm 30%</div>
 
-                <div class="price-breakdown-row" style="color: #4caf50; font-weight: bold;">
+                <c:if test="${not empty voucherCode}">
+                    <div class="discount-badge" style="background: #d32f2f; color: #fff; padding: 5px 12px; font-weight: bold; border-radius: 4px; display: inline-block; margin-bottom: 15px; font-size: 0.9rem;">
+                        <i class="fa-solid fa-tag"></i> Đã áp dụng mã: ${voucherCode}
+                    </div>
+                </c:if>
+
+                <div class="price-breakdown-row" style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 10px; color: #4caf50; font-weight: bold;">
                     <span>Phí đặt trước</span>
                     <span>MIỄN PHÍ</span>
                 </div>
-                <div class="price-breakdown-row">
-                    <span>Giá gốc (${totalNights} phòng x ${totalNights} đêm)</span>
-                    <span style="text-decoration: line-through;"><fmt:formatNumber value="${rawTotal}" type="number" groupingUsed="true"/> đ</span>
+
+                <div class="price-breakdown-row" style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 10px; color: var(--text-color);">
+                    <span>Giá gốc (${requiredRooms} phòng x ${totalNights} đêm)</span>
+                    <c:choose>
+                        <c:when test="${discount > 0}">
+                            <span style="text-decoration: line-through;"><fmt:formatNumber value="${priceWithVAT}" type="number" groupingUsed="true"/> đ</span>
+                        </c:when>
+                        <c:otherwise>
+                            <span><fmt:formatNumber value="${priceWithVAT}" type="number" groupingUsed="true"/> đ</span>
+                        </c:otherwise>
+                    </c:choose>
                 </div>
-                <div class="price-breakdown-row">
-                    <span>Giá phòng (1 phòng x 1 đêm)</span>
-                    <span><fmt:formatNumber value="${basePrice}" type="number" groupingUsed="true"/> đ</span>
+
+                <div class="price-breakdown-row" style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 10px; color: var(--text-color);">
+                    <span>Giá phòng (${requiredRooms} phòng x 1 đêm)</span>
+                    <span><fmt:formatNumber value="${basePrice * requiredRooms}" type="number" groupingUsed="true"/> đ</span>
                 </div>
-                <div class="price-breakdown-row">
-                    <span>Thuế và phí</span>
+
+                <div class="price-breakdown-row" style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 10px; color: var(--text-color);">
+                    <span>Thuế và phí (10% VAT)</span>
                     <span><fmt:formatNumber value="${taxAndFees}" type="number" groupingUsed="true"/> đ</span>
                 </div>
-                <div class="final-price-box price-breakdown-row">
-                    <span style="font-weight: bold; font-size: 1.1rem;">Giá cuối cùng</span>
+
+                <c:if test="${discount > 0}">
+                    <div class="price-breakdown-row" style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 10px; color: #d32f2f; font-weight: 500;">
+                        <span>Giảm giá Voucher (15%)</span>
+                        <span>- <fmt:formatNumber value="${discount}" type="number" groupingUsed="true"/> đ</span>
+                    </div>
+                </c:if>
+
+                <div class="final-price-box price-breakdown-row" style="border-top: 1px dashed var(--border-color); margin-top: 15px; padding-top: 15px; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-weight: bold; font-size: 1.1rem; color: var(--text-color);">Giá cuối cùng</span>
                     <span style="font-size: 1.6rem; font-weight: 900; color: #e65100;"><fmt:formatNumber value="${finalPrice}" type="number" groupingUsed="true"/> đ</span>
                 </div>
+
                 <p style="font-size: 0.75rem; color: var(--sub-text); text-align: right; margin: 5px 0 0 0;">
                     Giá đã bao gồm VAT: <fmt:formatNumber value="${taxAndFees}" type="number" groupingUsed="true"/> đ
                 </p>
@@ -403,11 +431,11 @@
                     <strong style="color: #4caf50;">An tâm thay đổi!</strong> Hủy miễn phí trước ngày nhận phòng. Dễ dàng chỉnh sửa đặt phòng trực tuyến – không tốn thêm chi phí! <a href="#" style="color:var(--primary-teal); text-decoration:none;">Xem thêm chi tiết</a>
                 </p>
 
-                <div class="timeline-container">
-                    <div class="timeline-line">
-                        <div class="timeline-dot" style="left: 0; background: #4caf50;"></div>
-                        <div class="timeline-dot" style="left: 50%; background: #4caf50;"></div>
-                        <div class="timeline-dot" style="right: 0; background: #ccc;"></div>
+                <div class="timeline-container" style="position: relative; margin-top: 15px;">
+                    <div class="timeline-line" style="height: 4px; background: #4caf50; border-radius: 2px; position: relative; margin-bottom: 10px;">
+                        <div class="timeline-dot" style="width: 12px; height: 12px; border-radius: 50%; position: absolute; top: -4px; left: 0; background: #4caf50;"></div>
+                        <div class="timeline-dot" style="width: 12px; height: 12px; border-radius: 50%; position: absolute; top: -4px; left: 50%; background: #4caf50;"></div>
+                        <div class="timeline-dot" style="width: 12px; height: 12px; border-radius: 50%; position: absolute; top: -4px; right: 0; background: #ccc;"></div>
                     </div>
                     <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--sub-text);">
                         <span>Hôm nay</span>
@@ -416,6 +444,7 @@
                     </div>
                 </div>
             </div>
+
 
         </div>
     </div>
