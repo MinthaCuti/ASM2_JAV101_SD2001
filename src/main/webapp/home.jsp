@@ -37,7 +37,6 @@
                     <input type="text" id="searchInput" name="destination" placeholder="Nhập điểm du lịch hoặc tên khách sạn" autocomplete="off" value="${param.destination}">
 
                     <div class="search-dropdown" id="searchDropdown">
-
                         <div class="dropdown-section" id="recentSearchSection" style="display: none;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                                 <h4>Tìm kiếm gần đây</h4>
@@ -114,21 +113,14 @@
                                 </div>
 
                                 <div class="room-type-container" id="roomTypeContainer">
-                                    <div class="room-type-item" onclick="selectRoomType('Standard Room')">
-                                        <span class="room-type-name">Standard Room</span>
-                                        <span class="room-type-price">Giá gốc</span>
+                                    <div class="room-type-item" onclick="selectRoomType('Phòng Đơn')">
+                                        <span class="room-type-name">Phòng Đơn</span>
                                     </div>
-                                    <div class="room-type-item" onclick="selectRoomType('Deluxe Room')">
-                                        <span class="room-type-name">Deluxe Room</span>
-                                        <span class="room-type-price">+500k</span>
+                                    <div class="room-type-item" onclick="selectRoomType('Phòng Đôi')">
+                                        <span class="room-type-name">Phòng Đôi</span>
                                     </div>
-                                    <div class="room-type-item" onclick="selectRoomType('Executive Suite')">
-                                        <span class="room-type-name">Executive Suite</span>
-                                        <span class="room-type-price">+1.2M</span>
-                                    </div>
-                                    <div class="room-type-item" onclick="selectRoomType('Presidential VIP')">
-                                        <span class="room-type-name">Presidential VIP</span>
-                                        <span class="room-type-price">+3.5M</span>
+                                    <div class="room-type-item" onclick="selectRoomType('Phòng VIP')">
+                                        <span class="room-type-name">Phòng VIP (Family)</span>
                                     </div>
                                 </div>
                             </div>
@@ -136,11 +128,11 @@
                             <div class="counter-row">
                                 <div class="counter-label">
                                     <h6>Người lớn</h6>
-                                    <p>18 tuổi trở lên</p>
+                                    <p>18 tuổi trở lên (Bắt buộc)</p>
                                 </div>
                                 <div class="counter-controls">
                                     <button type="button" class="btn-counter" onclick="changeCount('adult', -1)"><i class="fa-solid fa-minus"></i></button>
-                                    <span id="count-adult">2</span>
+                                    <span id="count-adult">1</span>
                                     <button type="button" class="btn-counter" onclick="changeCount('adult', 1)"><i class="fa-solid fa-plus"></i></button>
                                 </div>
                             </div>
@@ -160,7 +152,6 @@
                             <hr class="dropdown-divider">
                             <div id="childAgeWrapper" style="display: none; margin-top: 15px;">
                                 <div class="age-hint" style="font-weight: bold; margin-bottom: 8px; font-size: 0.9rem;">Độ tuổi của trẻ em</div>
-
                                 <div id="childAgeInputsContainer"></div>
                             </div>
                         </div>
@@ -170,15 +161,20 @@
                 <div class="filter-range" style="margin-top: 25px;">
                     <div class="realtime-badge-container">
                         <span class="realtime-title">Mức giá mỗi đêm:</span>
-                        <span class="realtime-badge-value cyan" id="priceRealtimeLabel">0đ trở lên</span>
+                        <span class="realtime-badge-value cyan" id="priceRealtimeLabel">0đ - 5.000.000đ</span>
                     </div>
-                    <input type="range" id="priceRangeSlider" name="priceFilter" min="0" max="5000000" step="100000" value="0" style="width: 100%;">
+
+                    <div class="dual-range-wrapper">
+                        <div class="dual-range-track" id="priceTrack"></div>
+
+                        <input type="range" id="minPriceSlider" name="minPriceFilter" min="0" max="5000000" step="100000" value="${not empty param.minPriceFilter ? param.minPriceFilter : '0'}" class="range-slider-input">
+
+                        <input type="range" id="maxPriceSlider" name="maxPriceFilter" min="0" max="5000000" step="100000" value="${not empty param.maxPriceFilter ? param.maxPriceFilter : '5000000'}" class="range-slider-input">
+                    </div>
+
                     <div class="ruler-container">
-                        <ul class="ruler-ticks">
+                        <ul class="ruler-ticks" style="display: flex; justify-content: space-between; padding: 0; margin: 0; list-style: none;">
                             <li>0đ</li>
-                            <li>1.2M</li>
-                            <li>2.5M</li>
-                            <li>3.7M</li>
                             <li>5.0M</li>
                         </ul>
                     </div>
@@ -205,6 +201,46 @@
             </div>
         </form>
 
+        <c:if test="${not empty hotels}">
+            <h2 class="section-title" style="margin-top: 40px;">Kết quả tìm kiếm khách sạn</h2>
+            <div class="hotels-grid" id="homeHotelsSection" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-bottom: 40px;">
+                <c:forEach var="h" items="${hotels}">
+                    <div class="hotel-card"
+                         data-price="${h.minPrice}"
+                         data-stars="${h.stars}"
+                         data-single="${h.availableSingleRooms}"
+                         data-double="${h.availableDoubleRooms}"
+                         data-family="${h.availableFamilyRooms}"
+                         style="background: var(--card-bg, #fff); padding: 15px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 10px;">
+
+                        <div style="height: 180px; overflow: hidden; border-radius: 10px;">
+                            <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400" alt="Hotel Img" style="width: 100%; height: 100%; object-fit: cover;">
+                        </div>
+                        <h4 style="margin: 5px 0 0 0; font-size: 1.1rem; font-weight: bold;">${h.name}</h4>
+                        <p style="margin: 0; font-size: 0.85rem; color: #666;"><i class="fa-solid fa-location-dot"></i> ${h.city}</p>
+                        <p style="margin: 0; font-size: 0.85rem; color: #ffa100;">${h.stars} ★</p>
+
+                        <div style="display: flex; gap: 5px; flex-wrap: wrap; font-size: 0.75rem; margin: 5px 0;">
+                            <span style="background: #e8f5e9; color: #2e7d32; padding: 2px 6px; border-radius: 4px;">Đơn: ${h.availableSingleRooms}</span>
+                            <span style="background: #e3f2fd; color: #1565c0; padding: 2px 6px; border-radius: 4px;">Đôi: ${h.availableDoubleRooms}</span>
+                            <span style="background: #fff3e0; color: #e65100; padding: 2px 6px; border-radius: 4px;">VIP: ${h.availableFamilyRooms}</span>
+                        </div>
+
+                        <div style="margin-top: auto; display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-weight: bold; color: #e65100; font-size: 1.1rem;">
+                                <fmt:formatNumber value="${h.minPrice}" type="number" groupingUsed="true"/> đ
+                            </span>
+                        </div>
+                    </div>
+                </c:forEach>
+            </div>
+
+            <div id="homeEmptyMsg" style="display: none; background: var(--card-bg, #fff); padding: 40px; text-align: center; border-radius: 15px; margin-top: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 40px;">
+                <p style="font-weight: bold; color: var(--text-color, #333); font-size: 1.1rem; margin-bottom: 8px;">Không có khách sạn nào đáp ứng bộ lọc của bạn.</p>
+                <p style="font-size: 0.9rem; color: var(--sub-text, #666);">Vui lòng chọn loại phòng khác, hạ mức sao hoặc nới lỏng mức giá.</p>
+            </div>
+        </c:if>
+
         <div class="promo-container">
             <div class="promo-header">
                 <h3>Chương trình khuyến mại chỗ ở</h3>
@@ -225,9 +261,7 @@
         <h2 class="section-title">Các điểm đến thu hút nhất Việt Nam</h2>
         <div class="destinations-grid">
             <div class="dest-card" onclick="handleItemClick('Vũng Tàu', 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=150', 'Khu vực Miền Nam')" style="cursor: pointer;"><img src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=500" alt="Vũng Tàu"><p>Vũng Tàu</p></div>
-
             <div class="dest-card" onclick="handleItemClick('Đà Lạt', 'https://images.unsplash.com/photo-1589308078059-be1415eab4c3?w=150', 'Khu vực Tây Nguyên')" style="cursor: pointer;"><img src="https://images.unsplash.com/photo-1589308078059-be1415eab4c3?w=500" alt="Đà Lạt"><p>Đà Lạt</p></div>
-
             <div class="dest-card" onclick="handleItemClick('Nha Trang', 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=150', 'Khánh Hòa')" style="cursor: pointer;"><img src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=500" alt="Nha Trang"><p>Nha Trang</p></div>
             <div class="dest-card" onclick="handleItemClick('Hà Nội', 'https://images.unsplash.com/photo-1528127269322-539801943592?w=150', 'Thủ đô Hà Nội')" style="cursor: pointer;"><img src="https://images.unsplash.com/photo-1528127269322-539801943592?w=500" alt="Hà Nội"><p>Hà Nội</p></div>
         </div>
@@ -236,10 +270,130 @@
 </div>
 
 <script>
-    var bookingConfig = { room: 1, adult: 2, child: 0, roomType: 'Chọn loại phòng' };
+    // Hàm lõi quét toàn bộ danh sách khách sạn dựa trên tất cả input hiện có
+    function filterHomeHotels() {
+        const hotelSection = document.getElementById('homeHotelsSection');
+        if (!hotelSection) return; // Nếu danh sách chưa được truyền về thì bỏ qua không chạy
+
+        const minPriceSlider = document.getElementById('minPriceSlider');
+        const maxPriceSlider = document.getElementById('maxPriceSlider');
+        const starSlider = document.getElementById('starFilterInput');
+
+        const minPrice = minPriceSlider ? parseInt(minPriceSlider.value) : 0;
+        const maxPrice = maxPriceSlider ? parseInt(maxPriceSlider.value) : 5000000;
+        const minStars = starSlider ? parseFloat(starSlider.value) : 1.0;
+
+        // Lấy cấu hình phòng đang chọn từ biến global bookingConfig
+        const reqRoomType = bookingConfig.roomType;
+        const reqRoomCount = bookingConfig.room;
+
+        const cards = hotelSection.querySelectorAll('.hotel-card');
+        let visibleCount = 0;
+
+        cards.forEach(card => {
+            const price = parseInt(card.getAttribute('data-price') || '0');
+            const stars = parseFloat(card.getAttribute('data-stars') || '1');
+            const single = parseInt(card.getAttribute('data-single') || '0');
+            const double = parseInt(card.getAttribute('data-double') || '0');
+            const family = parseInt(card.getAttribute('data-family') || '0');
+
+            // 1. Kiểm tra khoảng giá slider
+            const matchesPrice = (price >= minPrice && price <= maxPrice);
+
+            // 2. Kiểm tra hạng sao khách sạn
+            const matchesStars = (stars >= minStars);
+
+            // 3. Kiểm tra loại phòng và số lượng phòng trống thực tế
+            let matchesRoom = false;
+            if (reqRoomType === 'Phòng Đơn') {
+                matchesRoom = (single >= reqRoomCount);
+            } else if (reqRoomType === 'Phòng Đôi') {
+                matchesRoom = (double >= reqRoomCount);
+            } else if (reqRoomType === 'Phòng VIP') {
+                matchesRoom = (family >= reqRoomCount);
+            } else {
+                // Trường hợp chưa chọn cụ thể loại phòng ("Chọn loại phòng"), chỉ cần tổng số phòng trống đáp ứng đủ số lượng yêu cầu
+                matchesRoom = ((single + double + family) >= reqRoomCount);
+            }
+
+            // Kết hợp toàn bộ điều kiện lọc
+            if (matchesPrice && matchesStars && matchesRoom) {
+                card.style.display = 'flex';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        // Điều khiển ẩn hiện khối thông báo trống như thiết kế trang hotel list
+        const emptyMsg = document.getElementById('homeEmptyMsg');
+        if (emptyMsg) {
+            if (visibleCount === 0) {
+                emptyMsg.style.display = 'block';
+            } else {
+                emptyMsg.style.display = 'none';
+            }
+        }
+    }
+</script>
+
+<script>
+    const minPriceSlider = document.getElementById('minPriceSlider');
+    const maxPriceSlider = document.getElementById('maxPriceSlider');
+    const priceRealtimeLabel = document.getElementById('priceRealtimeLabel');
+    const priceTrack = document.getElementById('priceTrack');
+    if (minPriceSlider && maxPriceSlider && priceTrack && priceRealtimeLabel) {
+        const priceMaxLimit = 5000000;
+        const priceMinGap = 100000;
+
+        function formatCurrency(val) {
+            return new Intl.NumberFormat('vi-VN').format(val) + "đ";
+        }
+
+        function updatePriceRange() {
+            let minVal = parseInt(minPriceSlider.value);
+            let maxVal = parseInt(maxPriceSlider.value);
+
+            if (maxVal - minVal < priceMinGap) {
+                if (this === minPriceSlider) {
+                    minPriceSlider.value = maxVal - priceMinGap;
+                    minVal = maxVal - priceMinGap;
+                } else {
+                    maxPriceSlider.value = minVal + priceMinGap;
+                    maxVal = minVal + priceMinGap;
+                }
+            }
+
+            priceRealtimeLabel.textContent = formatCurrency(minVal) + " - " + formatCurrency(maxVal);
+            const percentLeft = (minVal / priceMaxLimit) * 100;
+            const percentWidth = ((maxVal - minVal) / priceMaxLimit) * 100;
+
+            priceTrack.style.left = percentLeft + "%";
+            priceTrack.style.width = percentWidth + "%";
+
+            // Kích hoạt hàm lọc danh sách phòng khi kéo thanh giá
+            filterHomeHotels();
+        }
+
+        minPriceSlider.addEventListener('input', function() {
+            minPriceSlider.style.zIndex = "3";
+            maxPriceSlider.style.zIndex = "2";
+            updatePriceRange.call(this);
+        });
+        maxPriceSlider.addEventListener('input', function() {
+            maxPriceSlider.style.zIndex = "3";
+            minPriceSlider.style.zIndex = "2";
+            updatePriceRange.call(this);
+        });
+        minPriceSlider.addEventListener('mouseenter', () => { minPriceSlider.style.zIndex = "3"; maxPriceSlider.style.zIndex = "2"; });
+        maxPriceSlider.addEventListener('mouseenter', () => { maxPriceSlider.style.zIndex = "3"; minPriceSlider.style.zIndex = "2"; });
+        updatePriceRange.call(minPriceSlider);
+    }
+
+    // LOGIC CỐT LÕI: TỰ ĐỘNG CHIA PHÒNG - MAX 3 NGƯỜI/PHÒNG, BẮT BUỘC >= 1 NGƯỜI LỚN
+    var bookingConfig = { room: 1, adult: 1, child: 0, roomType: 'Chọn loại phòng' };
 
     document.addEventListener("DOMContentLoaded", function() {
-        // Cấu hình Litepicker
         const dateRangeInput = document.getElementById('dateRangeInput');
         if(dateRangeInput){
             new Litepicker({
@@ -252,11 +406,8 @@
                 dropdowns: {"minYear": 2026, "maxYear": null, "months": true, "years": true},
                 setup: (picker) => {
                     picker.on('selected', (date1, date2) => {
-                        // Tính toán số ngày giữa 2 ngày được chọn
                         const timeDiff = Math.abs(date2.getTime() - date1.getTime());
                         const diffDays = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
-
-                        // Cập nhật text hiển thị kèm số điểm tương ứng (+X điểm)
                         dateRangeInput.value = date1.format('DD/MM/YYYY') + ' - ' + date2.format('DD/MM/YYYY') + ' (' + diffDays + ' ngày) +' + diffDays + ' điểm';
                     });
                 }
@@ -265,30 +416,18 @@
 
         updatePeopleInputText();
 
-        // ĐỒNG BỘ HIỂN THỊ REALTIME CHO GIÁ TIỀN & SAO
-        const priceSlider = document.getElementById('priceRangeSlider');
-        const priceLabel = document.getElementById('priceRealtimeLabel');
-        if(priceSlider && priceLabel) {
-            priceSlider.addEventListener('input', function(e) {
-                let val = e.target.value;
-                let formattedPrice = new Intl.NumberFormat('vi-VN').format(val);
-                priceLabel.textContent = formattedPrice + "đ trở lên";
-            });
-            let formattedPrice = new Intl.NumberFormat('vi-VN').format(priceSlider.value);
-            priceLabel.textContent = formattedPrice + "đ trở lên";
-        }
-
         const starSlider = document.getElementById('starFilterInput');
         const starLabel = document.getElementById('starRealtimeLabel');
         if(starSlider && starLabel) {
             starSlider.addEventListener('input', function(e) {
                 let val = parseFloat(e.target.value);
                 starLabel.textContent = val + " ★ trở lên";
+                // Chạy hàm lọc khi dịch chuyển thanh chọn sao
+                filterHomeHotels();
             });
             starLabel.textContent = starSlider.value + " ★ trở lên";
         }
 
-        // Xử lý gửi form tìm kiếm
         const searchInput = document.getElementById("searchInput");
         const searchForm = document.getElementById("searchForm");
         const searchIcon = document.getElementById("searchIcon");
@@ -315,8 +454,6 @@
             });
         }
 
-        // Đóng mở Hamburger Menu và DarkMode
-        // Đóng mở Hamburger Menu
         const hamburgerBtn = document.getElementById('hamburgerBtn');
         const hamburgerMenu = document.getElementById('hamburgerMenu');
         if(hamburgerBtn && hamburgerMenu) {
@@ -329,18 +466,15 @@
             });
         }
 
-        // KIỂM TRA TRẠNG THÁI DARK MODE KHI VỪA VÀO TRANG TRỦ
         if (localStorage.getItem('theme') === 'dark') {
             document.body.classList.add('dark-mode');
         } else {
             document.body.classList.remove('dark-mode');
         }
 
-        // ĐỒNG BỘ KHI BẤM NÚT TOGGLE Ở TRÊN HEADER
         const themeToggleBtn = document.getElementById('themeToggleBtn');
         if (themeToggleBtn) {
             themeToggleBtn.addEventListener('click', function() {
-                // Đoạn này để bổ trợ nếu nút gạt ở header cần kích hoạt cập nhật lại trạng thái class của trang chủ
                 setTimeout(() => {
                     if (document.body.classList.contains('dark-mode')) {
                         localStorage.setItem('theme', 'dark');
@@ -350,9 +484,11 @@
                 }, 50);
             });
         }
+
+        // Kích hoạt quét lọc danh sách khách sạn ngay khi tải xong trang Home
+        filterHomeHotels();
     });
 
-    // Quản lý trạng thái các ô Tìm kiếm gần đây & Số người
     var searchInput = document.getElementById('searchInput');
     var searchDropdown = document.getElementById('searchDropdown');
     var recentSection = document.getElementById('recentSearchSection');
@@ -380,7 +516,6 @@
         });
     }
 
-    // NGĂN CHẶN SỰ KIỆN CLICK BÊN TRONG DROPDOWN LÀM ĐÓNG BẢNG
     if (peopleDropdown) {
         peopleDropdown.addEventListener('click', function(e) {
             e.stopPropagation();
@@ -394,36 +529,64 @@
         });
     }
 
-    // Đóng các dropdown khi click ra ngoài màn hình
     document.addEventListener('click', function() {
         if(searchDropdown) searchDropdown.classList.remove('show');
         if(peopleDropdown) peopleDropdown.classList.remove('show');
         if(roomTypeContainer) roomTypeContainer.classList.remove('show');
     });
 
+    // LOGIC TĂNG GIẢM PHÒNG/NGƯỜI (AUTO-SCALING & VALIDATION)
     function changeCount(type, amount) {
         let span = document.getElementById('count-' + type);
         if(!span) return;
-        let current = parseInt(span.textContent);
+
+        let current = bookingConfig[type];
         let next = current + amount;
-        if(type === 'room' && (next < 1 || next > 9)) return;
+
+        // Bắt buộc ít nhất 1 người lớn
         if(type === 'adult' && (next < 1 || next > 20)) return;
         if(type === 'child' && (next < 0 || next > 10)) return;
 
-        span.textContent = next;
+        // Tính toán số phòng tối thiểu cần thiết (3 người / phòng)
+        let tempAdult = type === 'adult' ? next : bookingConfig.adult;
+        let tempChild = type === 'child' ? next : bookingConfig.child;
+        let minRoomsNeeded = Math.ceil((tempAdult + tempChild) / 3);
+
+        if(type === 'room') {
+            if (next < minRoomsNeeded) {
+                alert("Số lượng " + (tempAdult + tempChild) + " người yêu cầu tối thiểu " + minRoomsNeeded + " phòng (tối đa 3 người/phòng).");
+                return;
+            }
+            if (next > 9) return;
+        }
+
+        // Áp dụng thay đổi
         bookingConfig[type] = next;
+
+        // Tự động đẩy số lượng phòng lên nếu số người vượt quá sức chứa hiện tại
+        if ((type === 'adult' || type === 'child') && bookingConfig.room < minRoomsNeeded) {
+            bookingConfig.room = minRoomsNeeded;
+            document.getElementById('count-room').textContent = bookingConfig.room;
+        }
+
+        span.textContent = bookingConfig[type];
         updatePeopleInputText();
 
-        // 💡 CHÈN THÊM LOGIC ĐỒNG BỘ Ô NHẬP TUỔI VÀO ĐÂY:
         if (type === 'child') {
             renderChildAgeInputs(next);
         }
+
+        // Chạy hàm lọc khi tăng giảm số phòng trống yêu cầu
+        filterHomeHotels();
     }
 
     function selectRoomType(name) {
         bookingConfig.roomType = name;
         if(roomTypeContainer) roomTypeContainer.classList.remove('show');
         updatePeopleInputText();
+
+        // Chạy hàm lọc khi người dùng đổi loại hạng phòng (Đơn/Đôi/VIP)
+        filterHomeHotels();
     }
 
     function updatePeopleInputText() {
@@ -440,6 +603,7 @@
         if(searchDropdown) searchDropdown.classList.remove('show');
     }
 
+    // LƯU LỊCH SỬ TÌM KIẾM AN TOÀN TRONG LOCALSTORAGE
     function saveToRecent(name, img, desc) {
         let list = JSON.parse(localStorage.getItem('recentSearches') || '[]');
         list = list.filter(item => item.name !== name);
@@ -474,7 +638,6 @@
         });
     }
 
-    // Các hàm slide chuyển động slider quảng cáo
     let currentSlide = 0;
     function slideNext() {
         const slider = document.getElementById('promoSlider');
@@ -482,52 +645,16 @@
         currentSlide = (currentSlide + 1) % 4;
         slider.style.transform = 'translateX(-' + (currentSlide * 25) + '%)';
     }
-        const ageInput = document.getElementById('ageInput');
 
-        // Biến dùng để ghi nhớ giá trị hợp lệ gần nhất của người dùng
-        let lastValidValue = ageInput.value;
-
-        ageInput.addEventListener('input', function() {
-        // Nếu người dùng xóa hết chữ thì cho phép ô trống và lưu trạng thái trống
-        if (this.value === "") {
-        lastValidValue = "";
-        return;
-    }
-
-        // Chuyển giá trị vừa gõ sang số nguyên
-        const age = parseInt(this.value, 10);
-
-        // RÀNG BUỘC GẮT: Nếu lớn hơn 17 hoặc nhỏ hơn 0
-        if (age > 17 || age < 0) {
-        // 1. Bật pop-up thông báo của trang web lên ngay lập tức
-        alert("Độ tuổi của trẻ em phải từ 17 tuổi trở xuống!");
-
-        // 2. Không nhận ký tự vừa gõ, khôi phục lại số hợp lệ trước đó
-        this.value = lastValidValue;
-    } else {
-        // Nếu số gõ vào hợp lệ (từ 0 đến 17), cập nhật nó làm giá trị hợp lệ gần nhất
-        lastValidValue = this.value;
-    }
-    });
-
-    // Hàm tự động tạo ô nhập tuổi dựa trên số lượng trẻ em (Đã tích hợp chặn tuổi gắt)
     function renderChildAgeInputs(quantity) {
         const wrapper = document.getElementById('childAgeWrapper');
         const container = document.getElementById('childAgeInputsContainer');
-
-        // Xóa sạch các ô nhập tuổi cũ trước khi tạo mới
         container.innerHTML = '';
-
-        // Nếu số lượng trẻ em đưa vào bằng 0 hoặc nhỏ hơn, ẩn toàn bộ vùng này đi và dừng lại
         if (quantity <= 0) {
             wrapper.style.display = 'none';
             return;
         }
-
-        // Nếu có trẻ em, hiện vùng nhập tuổi lên
         wrapper.style.display = 'block';
-
-        // Vòng lặp sinh ra số lượng ô nhập tương ứng với số trẻ em
         for (let i = 1; i <= quantity; i++) {
             const group = document.createElement('div');
             group.style.margin = '8px 0';
@@ -542,11 +669,10 @@
 
             const input = document.createElement('input');
             input.type = 'number';
-            input.className = 'age-input'; // Giữ nguyên class của cậu để ăn theo CSS có sẵn
+            input.className = 'age-input';
             input.placeholder = '0 - 17';
             input.style.width = '100px';
 
-            // Tính năng CHẶN TUỔI > 17 ngay lập tức khi gõ
             let lastValidValue = "";
             input.addEventListener('input', function() {
                 if (this.value === "") {
@@ -556,43 +682,21 @@
                 const age = parseInt(this.value, 10);
                 if (age > 17 || age < 0) {
                     alert('Độ tuổi của trẻ em thứ ' + i + ' phải từ 17 tuổi trở xuống!');
-                    this.value = lastValidValue; // Trả về số cũ hợp lệ
+                    this.value = lastValidValue;
                 } else {
-                    lastValidValue = this.value; // Lưu lại số đúng gần nhất
+                    lastValidValue = this.value;
                 }
             });
-
-            // Ghép nối giao diện
             group.appendChild(label);
             group.appendChild(input);
             container.appendChild(group);
         }
     }
-    // Ví dụ logic nút Cộng (+) Trẻ em của cậu
-    btnPlusChild.addEventListener('click', function() {
-        childCount++; // Tăng số lượng trẻ em lên
-        childDisplay.textContent = childCount; // Hiển thị số lượng ra màn hình (0, 1, 2...)
-
-        // 💡 CHÈN THÊM DÒNG NÀY:
-        renderChildAgeInputs(childCount);
-    });
-
-    // Ví dụ logic nút Trừ (-) Trẻ em của cậu
-    btnMinusChild.addEventListener('click', function() {
-        if (childCount > 0) {
-            childCount--; // Giảm số lượng trẻ em xuống
-            childDisplay.textContent = childCount;
-
-            // 💡 CHÈN THÊM DÒNG NÀY:
-            renderChildAgeInputs(childCount);
-        }
-    });
 </script>
 <c:if test="${not empty sessionScope.errorMessage}">
     <script>
         alert("${sessionScope.errorMessage}");
     </script>
-    <%-- Hiển thị xong thì xóa thông báo đi để lần sau vào lại trang chủ không bị hiện lại --%>
     <c:remove var="errorMessage" scope="session" />
 </c:if>
 </body>
