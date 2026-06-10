@@ -63,4 +63,30 @@ public class Hotel {
     public void setMinPrice(double minPrice) {
         this.minPrice = minPrice;
     }
+    // 1. Thêm 3 thuộc tính này vào trong class Hotel
+    private int availableSingleRooms;
+    private int availableDoubleRooms;
+    private int availableFamilyRooms;
+
+    // 2. Thêm các hàm Getter và Setter dưới đây:
+    public int getAvailableSingleRooms() {
+        return availableSingleRooms;
+    }
+    public void setAvailableSingleRooms(int availableSingleRooms) {
+        this.availableSingleRooms = availableSingleRooms;
+    }
+
+    public int getAvailableDoubleRooms() {
+        return availableDoubleRooms;
+    }
+    public void setAvailableDoubleRooms(int availableDoubleRooms) {
+        this.availableDoubleRooms = availableDoubleRooms;
+    }
+
+    public int getAvailableFamilyRooms() {
+        return availableFamilyRooms;
+    }
+    public void setAvailableFamilyRooms(int availableFamilyRooms) {
+        this.availableFamilyRooms = availableFamilyRooms;
+    }
 }
