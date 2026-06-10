@@ -9,7 +9,6 @@ import model.Room;
 import model.User;
 
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
@@ -17,53 +16,44 @@ import java.util.List;
 
 public class UserDAO {
 
-    // 1. Thực hiện chèn tài khoản mới khi Đăng ký
     public boolean registerUser(String firstName, String lastName, String email, String countryCode, String phoneNumber, String password) {
         String query = "INSERT INTO Users (FirstName, LastName, Email, CountryCode, PhoneNumber, Password, Role, IsActive) VALUES (?, ?, ?, ?, ?, ?, 'Customer', 1)";
         try (Connection conn = DBConnect.getConnection();
              PreparedStatement ps = conn.prepareStatement(query)) {
-            ps.setString(1, firstName);
-            ps.setString(2, lastName);
-            ps.setString(3, email);
-            ps.setString(4, countryCode);
-            ps.setString(5, phoneNumber);
-            ps.setString(6, password);
+            ps.setString(1, firstName); ps.setString(2, lastName);
+            ps.setString(3, email); ps.setString(4, countryCode);
+            ps.setString(5, phoneNumber); ps.setString(6, password);
             return ps.executeUpdate() > 0;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        } catch (Exception e) { e.printStackTrace(); }
         return false;
     }
 
-    // 2. Kiểm tra tài khoản tồn tại khi Đăng nhập
     public boolean checkLogin(String phoneNumber) {
         String query = "SELECT * FROM Users WHERE PhoneNumber = ?";
-        try (Connection conn = DBConnect.getConnection();
-             PreparedStatement ps = conn.prepareStatement(query)) {
+        try (Connection conn = DBConnect.getConnection(); PreparedStatement ps = conn.prepareStatement(query)) {
             ps.setString(1, phoneNumber);
-            try (ResultSet rs = ps.executeQuery()) {
-                return rs.next();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+            try (ResultSet rs = ps.executeQuery()) { return rs.next(); }
+        } catch (Exception e) { e.printStackTrace(); }
         return false;
     }
 
-    // 3. Hàm tìm kiếm khách sạn theo khu vực/thành phố
+    // ĐẾM PHÒNG TRỐNG CHO HOTEL LIST CHUẨN XÁC
     public List<Hotel> searchHotelsByArea(String keyword) {
         List<Hotel> list = new ArrayList<>();
+        String searchPattern = (keyword == null || keyword.trim().isEmpty()) ? "%" : "%" + keyword + "%";
         String query = "SELECT h.HotelID, h.HotelName, h.City, h.Address, h.StarRating, " +
-                "ISNULL(MIN(r.Price), 0) AS MinPrice " +
+                "ISNULL(MIN(r.Price), 0) AS MinPrice, " +
+                "SUM(CASE WHEN r.RoomType LIKE N'%Phòng Đơn%' AND r.Status = 'Available' THEN 1 ELSE 0 END) AS SingleCount, " +
+                "SUM(CASE WHEN (r.RoomType LIKE N'%Phòng Đôi%' OR r.RoomType LIKE N'%Tiêu Chuẩn%') AND r.Status = 'Available' THEN 1 ELSE 0 END) AS DoubleCount, " +
+                "SUM(CASE WHEN (r.RoomType LIKE N'%Family%' OR r.RoomType LIKE N'%VIP%') AND r.Status = 'Available' THEN 1 ELSE 0 END) AS FamilyCount " +
                 "FROM Hotels h " +
                 "LEFT JOIN Rooms r ON h.HotelID = r.HotelID " +
-                "WHERE h.City LIKE ? OR h.HotelName LIKE ? " +
+                "WHERE (h.City LIKE ? OR h.HotelName LIKE ?) " +
                 "GROUP BY h.HotelID, h.HotelName, h.City, h.Address, h.StarRating";
 
-        try (Connection conn = DBConnect.getConnection();
-             PreparedStatement ps = conn.prepareStatement(query)) {
-            ps.setString(1, "%" + keyword + "%");
-            ps.setString(2, "%" + keyword + "%");
+        try (Connection conn = DBConnect.getConnection(); PreparedStatement ps = conn.prepareStatement(query)) {
+            ps.setString(1, searchPattern);
+            ps.setString(2, searchPattern);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     Hotel hotel = new Hotel();
@@ -73,31 +63,23 @@ public class UserDAO {
                     hotel.setAddress(rs.getString("Address"));
                     hotel.setStars(rs.getInt("StarRating"));
                     hotel.setMinPrice(rs.getDouble("MinPrice"));
+                    hotel.setAvailableSingleRooms(rs.getInt("SingleCount"));
+                    hotel.setAvailableDoubleRooms(rs.getInt("DoubleCount"));
+                    hotel.setAvailableFamilyRooms(rs.getInt("FamilyCount"));
                     list.add(hotel);
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        } catch (Exception e) { e.printStackTrace(); }
         return list;
     }
 
-    // 4. Hàm lấy danh sách phòng trống bọc try-catch chống sai tên cột RoomName từ DB
+    // FIX LỖI ROOM LIST KHÔNG HIỆN BẰNG CÁCH TRY-CATCH TỪNG CỘT
     public List<Room> getAvailableRooms(int hotelId, String checkIn, String checkOut) {
         List<Room> list = new ArrayList<>();
-
-        String query = "SELECT * FROM Rooms WHERE HotelID = ? AND RoomID NOT IN (" +
-                "    SELECT RoomID FROM Bookings " +
-                "    WHERE BookingStatus = 'Success' " +
-                "    AND RoomID IS NOT NULL " +
-                "    AND (? < CheckOutDate AND ? > CheckInDate)" +
-                ")";
-
-        try (Connection conn = DBConnect.getConnection();
-             PreparedStatement ps = conn.prepareStatement(query)) {
-
+        String query = "SELECT * FROM Rooms WHERE HotelID = ? AND Status = 'Available' AND RoomID NOT IN (" +
+                " SELECT RoomID FROM Bookings WHERE BookingStatus = 'Success' AND RoomID IS NOT NULL AND (? < CheckOutDate AND ? > CheckInDate))";
+        try (Connection conn = DBConnect.getConnection(); PreparedStatement ps = conn.prepareStatement(query)) {
             ps.setInt(1, hotelId);
-
             try {
                 ps.setDate(2, java.sql.Date.valueOf(checkIn));
                 ps.setDate(3, java.sql.Date.valueOf(checkOut));
@@ -109,309 +91,136 @@ public class UserDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     Room r = new Room();
-
                     int roomIdFromDB = rs.getInt("RoomID");
-                    r.setId(roomIdFromDB);
-                    r.setRoomId(roomIdFromDB);
+                    r.setId(roomIdFromDB); r.setRoomId(roomIdFromDB);
                     r.setHotelId(rs.getInt("HotelID"));
-                    r.setPrice(rs.getDouble("Price")); // Lấy giá chuẩn từ DB
+                    r.setPrice(rs.getDouble("Price"));
 
-                    // Đọc cột RoomType từ SQL của Mint làm tên hiển thị
-                    String roomTypeFromDB = "Phòng Tiêu Chuẩn";
-                    try {
-                        if (rs.getNString("RoomType") != null) {
-                            roomTypeFromDB = rs.getNString("RoomType");
-                        }
-                    } catch (Exception eName) {
-                        try {
-                            roomTypeFromDB = rs.getNString("RoomName");
-                        } catch (Exception eName2) {}
-                    }
-                    r.setRoomName(roomTypeFromDB);
-                    r.setRoomTypeName(roomTypeFromDB);
+                    // 1. Cột Tên Phòng
+                    try { r.setRoomTypeName(rs.getString("RoomType") != null ? rs.getString("RoomType") : "Phòng Tiêu Chuẩn"); }
+                    catch (Exception e) { r.setRoomTypeName("Phòng Tiêu Chuẩn"); }
 
-                    // BẢO VỆ: Nếu DB chưa có cột MaxAdults thì mặc định là 2
-                    try {
-                        r.setMaxAdults(rs.getInt("MaxAdults"));
-                    } catch (Exception e) {
-                        r.setMaxAdults(2);
-                    }
+                    // 2. Cột Người Lớn (Bọc try-catch chống sập nếu DB chưa có cột)
+                    try { r.setMaxAdults(rs.getInt("MaxAdults")); } catch (Exception e) { r.setMaxAdults(2); }
 
-                    // BẢO VỆ: Nếu DB chưa có cột MaxChildren thì mặc định là 1
-                    try {
-                        r.setMaxChildren(rs.getInt("MaxChildren"));
-                    } catch (Exception e) {
-                        r.setMaxChildren(1);
-                    }
+                    // 3. Cột Trẻ Em
+                    try { r.setMaxChildren(rs.getInt("MaxChildren")); } catch (Exception e) { r.setMaxChildren(1); }
 
-                    // BẢO VỆ: Nếu DB chưa có cột Area thì mặc định là 30m²
-                    try {
-                        r.setArea(rs.getInt("Area"));
-                    } catch (Exception e) {
-                        r.setArea(30);
-                    }
+                    // 4. Cột Diện Tích
+                    try { r.setArea(rs.getInt("Area")); } catch (Exception e) { r.setArea(30); }
 
-                    // BẢO VỆ: Nếu DB chưa có cột Description
-                    try {
-                        r.setDescription(rs.getString("Description"));
-                    } catch (Exception e) {
-                        r.setDescription("Phòng nghỉ rộng rãi, đầy đủ tiện nghi, mang lại cảm giác ấm cúng.");
-                    }
-
-                    // BẢO VỆ: Nếu DB chưa có cột Image thì tự lấy ảnh ngẫu nhiên tương ứng với ID phòng cho đẹp mắt
+                    // 5. Hình Ảnh
                     try {
                         String img = rs.getString("Image");
-                        r.setImage(img != null && !img.isEmpty() ? img : "https://images.unsplash.com/photo-1618773928121-c32242e63f39?w=500");
-                    } catch (Exception e) {
-                        // Tạo ảnh thay đổi theo ID phòng cho sinh động sinh viên
-                        if (roomIdFromDB % 2 == 0) {
-                            r.setImage("https://images.unsplash.com/photo-1590490360182-c33d57733427?w=500");
-                        } else {
-                            r.setImage("https://images.unsplash.com/photo-1618773928121-c32242e63f39?w=500");
-                        }
-                    }
+                        r.setImage((img != null && !img.trim().isEmpty()) ? img : "https://images.unsplash.com/photo-1618773928121-c32242e63f39?w=500");
+                    } catch (Exception e) { r.setImage("https://images.unsplash.com/photo-1618773928121-c32242e63f39?w=500"); }
 
                     list.add(r);
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        } catch (Exception e) { e.printStackTrace(); }
         return list;
     }
 
-    // 5. Hàm lấy thông tin một khách sạn cụ thể
     public model.Hotel getHotelById(int hotelId) {
         model.Hotel hotel = null;
-        String sql = "SELECT h.HotelID, h.HotelName, h.City, h.Address, h.StarRating, " +
-                "ISNULL((SELECT MIN(Price) FROM Rooms WHERE HotelID = h.HotelID), 0) AS MinPrice " +
-                "FROM Hotels h WHERE h.HotelID = ?";
-        try (Connection conn = DBConnect.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
+        String sql = "SELECT h.HotelID, h.HotelName, h.City, h.Address, h.StarRating, ISNULL((SELECT MIN(Price) FROM Rooms WHERE HotelID = h.HotelID), 0) AS MinPrice FROM Hotels h WHERE h.HotelID = ?";
+        try (Connection conn = DBConnect.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, hotelId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     hotel = new model.Hotel();
-                    hotel.setId(rs.getInt("HotelID"));
-                    hotel.setName(rs.getString("HotelName"));
-                    hotel.setCity(rs.getString("City"));
-                    hotel.setAddress(rs.getString("Address"));
-                    hotel.setStars(rs.getInt("StarRating"));
-                    hotel.setMinPrice(rs.getDouble("MinPrice"));
+                    hotel.setId(rs.getInt("HotelID")); hotel.setName(rs.getString("HotelName"));
+                    hotel.setCity(rs.getString("City")); hotel.setAddress(rs.getString("Address"));
+                    hotel.setStars(rs.getInt("StarRating")); hotel.setMinPrice(rs.getDouble("MinPrice"));
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        } catch (Exception e) { e.printStackTrace(); }
         return hotel;
     }
+
+    // Các hàm phụ trợ khác giữ nguyên theo code cậu gửi
     public String getFirstNameByPhone(String phoneNumber) {
-        String query = "SELECT FirstName FROM Users WHERE PhoneNumber = ?";
-        try (Connection conn = DBConnect.getConnection();
-             PreparedStatement ps = conn.prepareStatement(query)) {
+        try (Connection conn = DBConnect.getConnection(); PreparedStatement ps = conn.prepareStatement("SELECT FirstName FROM Users WHERE PhoneNumber = ?")) {
             ps.setString(1, phoneNumber);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getString("FirstName");
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return ""; // Trả về chuỗi rỗng nếu không tìm thấy
+            try (ResultSet rs = ps.executeQuery()) { if (rs.next()) return rs.getString("FirstName"); }
+        } catch (Exception e) { e.printStackTrace(); } return "";
     }
     public String getRoleByPhone(String phone) {
-        String role = "Customer"; // Mặc định nếu có lỗi thì tài khoản là Customer cho an toàn
-        String sql = "SELECT Role FROM Users WHERE PhoneNumber = ?";
-        try (Connection conn = DBConnect.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnect.getConnection(); PreparedStatement ps = conn.prepareStatement("SELECT Role FROM Users WHERE PhoneNumber = ?")) {
             ps.setString(1, phone);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    role = rs.getString("Role").trim();
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return role;
+            try (ResultSet rs = ps.executeQuery()) { if (rs.next()) return rs.getString("Role").trim(); }
+        } catch (Exception e) { e.printStackTrace(); } return "Customer";
     }
-
     public String getEmailByPhone(String phone) {
-        String email = "";
-        // Thay đổi tên bảng và tên cột cho đúng với Database (SQL Server/MySQL) của các bạn nhé
-        String query = "SELECT Email FROM Users WHERE PhoneNumber = ?";
-
-        // Đoạn này dùng kết nối DB hiện tại của các bạn (ví dụ dùng Connection, PreparedStatement)
-        try {
-            // Giả sử các bạn có hàm lấy connection là getConnection() hoặc từ một class DBContext
-            java.sql.Connection conn = new context.DBConnect().getConnection(); // Sửa lại cho đúng cách gọi DB của bạn
-            java.sql.PreparedStatement ps = conn.prepareStatement(query);
+        try (Connection conn = DBConnect.getConnection(); PreparedStatement ps = conn.prepareStatement("SELECT Email FROM Users WHERE PhoneNumber = ?")) {
             ps.setString(1, phone);
-            java.sql.ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                email = rs.getString("email");
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return email;
+            try (ResultSet rs = ps.executeQuery()) { if (rs.next()) return rs.getString("Email"); }
+        } catch (Exception e) { e.printStackTrace(); } return "";
     }
-
-    // Kiếm tra xem số điện thoại có tồn tại trong hệ thống không
     public boolean checkPhoneExists(String phoneNumber) {
-        String query = "SELECT * FROM Users WHERE PhoneNumber = ?";
-        try (Connection conn = DBConnect.getConnection();
-             PreparedStatement ps = conn.prepareStatement(query)) {
+        try (Connection conn = DBConnect.getConnection(); PreparedStatement ps = conn.prepareStatement("SELECT * FROM Users WHERE PhoneNumber = ?")) {
             ps.setString(1, phoneNumber);
-            try (ResultSet rs = ps.executeQuery()) {
-                return rs.next(); // Trả về true nếu tìm thấy số điện thoại
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return false;
+            try (ResultSet rs = ps.executeQuery()) { return rs.next(); }
+        } catch (Exception e) { e.printStackTrace(); } return false;
     }
-    // Kiểm tra xem sự kết hợp giữa Số điện thoại và Mật khẩu có chính xác không
     public boolean validatePassword(String phoneNumber, String password) {
-        String query = "SELECT * FROM Users WHERE PhoneNumber = ? AND Password = ?";
-        try (Connection conn = DBConnect.getConnection();
-             PreparedStatement ps = conn.prepareStatement(query)) {
-            ps.setString(1, phoneNumber);
-            ps.setString(2, password);
-            try (ResultSet rs = ps.executeQuery()) {
-                return rs.next(); // Trả về true nếu cả tài khoản và mật khẩu đều khớp
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return false;
+        try (Connection conn = DBConnect.getConnection(); PreparedStatement ps = conn.prepareStatement("SELECT * FROM Users WHERE PhoneNumber = ? AND Password = ?")) {
+            ps.setString(1, phoneNumber); ps.setString(2, password);
+            try (ResultSet rs = ps.executeQuery()) { return rs.next(); }
+        } catch (Exception e) { e.printStackTrace(); } return false;
     }
-
-    // Kiểm tra xem Email Google đăng nhập đã tồn tại trong DB chưa
     public boolean checkEmailExists(String email) {
-        String query = "SELECT * FROM Users WHERE Email = ?";
-        try (Connection conn = DBConnect.getConnection();
-             PreparedStatement ps = conn.prepareStatement(query)) {
+        try (Connection conn = DBConnect.getConnection(); PreparedStatement ps = conn.prepareStatement("SELECT * FROM Users WHERE Email = ?")) {
             ps.setString(1, email);
-            try (ResultSet rs = ps.executeQuery()) {
-                return rs.next(); // Trả về true nếu email đã có tài khoản liên kết
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return false;
+            try (ResultSet rs = ps.executeQuery()) { return rs.next(); }
+        } catch (Exception e) { e.printStackTrace(); } return false;
     }
-
-    // Lấy số điện thoại tương ứng với Email (Dùng để nạp Session khi tự động đăng nhập)
     public String getPhoneByEmail(String email) {
-        String query = "SELECT PhoneNumber FROM Users WHERE Email = ?";
-        try (Connection conn = DBConnect.getConnection();
-             PreparedStatement ps = conn.prepareStatement(query)) {
+        try (Connection conn = DBConnect.getConnection(); PreparedStatement ps = conn.prepareStatement("SELECT PhoneNumber FROM Users WHERE Email = ?")) {
             ps.setString(1, email);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getString("PhoneNumber");
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return ""; // Trả về chuỗi rỗng nếu không tìm thấy dữ liệu liên kết
+            try (ResultSet rs = ps.executeQuery()) { if (rs.next()) return rs.getString("PhoneNumber"); }
+        } catch (Exception e) { e.printStackTrace(); } return "";
     }
 
-
+    // --- CÁC HÀM SỬ DỤNG JPA ---
     public List<User> findAll() {
         EntityManager entityManager = JpaUtils.getEntityManager();
-        try {
-            TypedQuery<User> query = entityManager.createQuery("SELECT u FROM User u", User.class);
-            return query.getResultList();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new ArrayList<>();
-        } finally {
-            entityManager.close();
-        }
+        try { return entityManager.createQuery("SELECT u FROM User u", User.class).getResultList(); }
+        catch (Exception e) { e.printStackTrace(); return new ArrayList<>(); } finally { entityManager.close(); }
     }
-
     public List<User> getAll() {
         EntityManager entityManager = JpaUtils.getEntityManager();
-        try {
-            String jpql = "SELECT u FROM User u WHERE u.isActive = true";
-            return entityManager.createQuery(jpql, User.class).getResultList();
-        } finally {
-            entityManager.close();
-        }
+        try { return entityManager.createQuery("SELECT u FROM User u WHERE u.isActive = true", User.class).getResultList(); }
+        finally { entityManager.close(); }
     }
-
     public User findById(int id){
         EntityManager entityManager = JpaUtils.getEntityManager();
         try {
-            String sql = "SELECT u FROM User u WHERE u.id = :id and u.isActive = true";
-            TypedQuery<User> query = entityManager.createQuery(sql, User.class);
-            query.setParameter("id", id);
-            return query.getSingleResult();
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            entityManager.close();
-        }
-        return null;
+            TypedQuery<User> query = entityManager.createQuery("SELECT u FROM User u WHERE u.id = :id and u.isActive = true", User.class);
+            query.setParameter("id", id); return query.getSingleResult();
+        } catch (Exception e) { e.printStackTrace(); } finally { entityManager.close(); } return null;
     }
     public void update(User user) {
         EntityManager em = JpaUtils.getEntityManager();
-        try {
-            em.getTransaction().begin();
-            em.merge(user);
-            em.getTransaction().commit();
-        } catch (Exception e) {
-            if (em.getTransaction().isActive()) {
-                em.getTransaction().rollback();
-            }
-            e.printStackTrace();
-        } finally {
-            em.close();
-        }
+        try { em.getTransaction().begin(); em.merge(user); em.getTransaction().commit(); }
+        catch (Exception e) { if (em.getTransaction().isActive()) em.getTransaction().rollback(); e.printStackTrace(); }
+        finally { em.close(); }
     }
     public void delete(int id) {
         EntityManager em = JpaUtils.getEntityManager();
         try {
-            em.getTransaction().begin();
-            User user = em.find(User.class, id);
-            if (user != null) {
-                // Thay vì xóa hẳn, ta chỉ lật trạng thái hoạt động sang false (vô hiệu hóa)
-                user.setIsActive(false);
-                em.merge(user); // Lưu cập nhật trạng thái xuống database
-            }
+            em.getTransaction().begin(); User user = em.find(User.class, id);
+            if (user != null) { user.setIsActive(false); em.merge(user); }
             em.getTransaction().commit();
-        } catch (Exception e) {
-            if (em.getTransaction().isActive()) {
-                em.getTransaction().rollback();
-            }
-            e.printStackTrace();
-        } finally {
-            em.close();
-        }
+        } catch (Exception e) { if (em.getTransaction().isActive()) em.getTransaction().rollback(); e.printStackTrace(); }
+        finally { em.close(); }
     }
-
-    // Hàm lấy đầy đủ Object User bằng số điện thoại (Dùng JPA)
     public User getUserByPhone(String phone) {
-        jakarta.persistence.EntityManager em = Utils.JpaUtils.getEntityManager();
+        EntityManager em = JpaUtils.getEntityManager();
         try {
-            // Câu lệnh JPQL tìm User theo số điện thoại
-            String jpql = "SELECT u FROM User u WHERE u.phoneNumber = :phone";
-            jakarta.persistence.TypedQuery<User> query = em.createQuery(jpql, User.class);
-            query.setParameter("phone", phone);
-
-            java.util.List<User> list = query.getResultList();
-            // Nếu tìm thấy thì trả về phần tử đầu tiên, không thì trả về null
-            return list.isEmpty() ? null : list.get(0);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        } finally {
-            em.close();
-        }
+            TypedQuery<User> query = em.createQuery("SELECT u FROM User u WHERE u.phoneNumber = :phone", User.class);
+            query.setParameter("phone", phone); List<User> list = query.getResultList(); return list.isEmpty() ? null : list.get(0);
+        } catch (Exception e) { e.printStackTrace(); return null; } finally { em.close(); }
     }
 }
