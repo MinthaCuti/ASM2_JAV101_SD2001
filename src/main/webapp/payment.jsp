@@ -1,6 +1,10 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" isELIgnored="false" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+
+<fmt:formatNumber value="${finalPrice}" pattern="#" var="fullAmount" />
+<fmt:formatNumber value="${finalPrice / 2}" pattern="#" var="depositAmount" />
+
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -298,24 +302,25 @@
                     <label class="method-option">
                         <input type="radio" name="paymentMethod" value="direct">
                         <div>
-                            <strong style="font-size: 0.95rem; display:block; margin-bottom:2px;">Thanh toán trực tiếp cho chỗ nghỉ.</strong>
-                            <span style="font-size: 0.85rem; color: var(--sub-text);">Quý khách sẽ thanh toán bằng tiền mặt hoặc thẻ tại quầy lễ tân khi đến nhận phòng.</span>
+                            <strong style="font-size: 0.95rem; display:block; margin-bottom:2px;">Thanh toán trực tiếp (Đặt cọc trước 50%)</strong>
+                            <span style="font-size: 0.85rem; color: var(--sub-text);">Quý khách quét mã đặt cọc 50% trực tuyến ngay bây giờ, 50% còn lại sẽ thanh toán tại quầy lễ tân khi nhận phòng.</span>
                         </div>
                     </label>
 
                     <label class="method-option">
                         <input type="radio" name="paymentMethod" value="qr" checked>
                         <div>
-                            <strong style="font-size: 0.95rem; display:block; margin-bottom:2px;">Thanh toán qua QR</strong>
-                            <span style="font-size: 0.85rem; color: var(--sub-text);">Quét mã chuyển khoản nhanh qua ngân hàng để xác nhận phòng lập tức.</span>
+                            <strong style="font-size: 0.95rem; display:block; margin-bottom:2px;">Thanh toán qua QR (Trả thẳng 100%)</strong>
+                            <span style="font-size: 0.85rem; color: var(--sub-text);">Quét mã chuyển khoản nhanh toàn bộ 100% hóa đơn để xác nhận phòng lập tức.</span>
                         </div>
                     </label>
                 </div>
 
                 <div id="qr-section">
                     <div class="qr-display-box">
-                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://grievous-dimmed-sassy.ngrok-free.dev${pageContext.request.contextPath}/FakeBankController?roomId=${roomId}%26amount=${finalPrice}" alt="QR Payment" style="width:200px; height:200px;">
+                        <img id="qr-image" src="" alt="QR Payment" style="width:200px; height:200px;">
                     </div>
+                    <p id="qr-note" style="text-align: center; font-size: 0.85rem; font-weight: bold; margin-top: 10px; color: #0288d1;"></p>
                 </div>
 
                 <div class="policy-agreement-text">
@@ -327,6 +332,9 @@
             <form action="FinalizeBookingController" method="POST">
                 <input type="hidden" name="roomId" value="${roomId}">
                 <input type="hidden" name="customerName" value="${customerName}">
+
+                <input type="hidden" name="paymentMethod" id="hiddenPaymentMethod" value="qr">
+
                 <button type="submit" class="btn-waiting-payment">
                     <i class="fa-solid fa-lock"></i> CHỜ THANH TOÁN
                 </button>
@@ -445,7 +453,6 @@
                 </div>
             </div>
 
-
         </div>
     </div>
 </div>
@@ -484,32 +491,62 @@
         let pollingInterval = null;
         const roomId = roomIdInput.value;
 
+        // Lấy giá trị tiền từ JSTL đổ vào biến JavaScript
+        const fullAmount = "${fullAmount}";
+        const depositAmount = "${depositAmount}";
+        const contextPath = "${pageContext.request.contextPath}";
+
         function verifyRealPayment() {
             const selectedMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
 
-            if (selectedMethod === "direct") {
-                if (qrSection) qrSection.style.display = "none";
-                clearInterval(pollingInterval);
-
-                submitBtn.innerHTML = "TIẾP TỤC";
-                submitBtn.classList.add("btn-continue-active");
-                submitBtn.disabled = false;
-            } else {
-                if (qrSection) qrSection.style.display = "block";
-
-                submitBtn.innerHTML = '<i class="fa-solid fa-lock"></i> CHỜ THANH TOÁN';
-                submitBtn.classList.remove("btn-continue-active");
-                submitBtn.disabled = true;
-
-                startRealTimeChecking();
+            // Đồng bộ sang thẻ input hidden trong form để submit lên controller xử lý sau này
+            const hiddenMethodInput = document.getElementById("hiddenPaymentMethod");
+            if (hiddenMethodInput) {
+                hiddenMethodInput.value = selectedMethod;
             }
+
+            const qrImage = document.getElementById("qr-image");
+            const qrNote = document.getElementById("qr-note");
+
+            // Cả hai phương thức hiện tại đều cần hiển thị vùng QR và khóa nút để đợi xác nhận ngân hàng
+            if (qrSection) qrSection.style.display = "block";
+
+            submitBtn.innerHTML = '<i class="fa-solid fa-lock"></i> CHỜ THANH TOÁN';
+            submitBtn.classList.remove("btn-continue-active");
+            submitBtn.disabled = true;
+
+            let currentAmount = fullAmount;
+
+            // Xử lý đổi giá tiền và lời nhắc theo phương thức lựa chọn
+            if (selectedMethod === "direct") {
+                currentAmount = depositAmount;
+                if (qrNote) {
+                    qrNote.innerHTML = '<i class="fa-solid fa-money-bill-wave"></i> Vui lòng quét mã ĐẶT CỌC 50% để hoàn tất đặt phòng!';
+                    qrNote.style.color = "#e65100"; // Màu cam nổi bật cảnh báo cọc tiền
+                }
+            } else {
+                currentAmount = fullAmount;
+                if (qrNote) {
+                    qrNote.innerHTML = '<i class="fa-solid fa-qrcode"></i> Vui lòng quét mã THANH TOÁN 100% để xác nhận phòng lập tức!';
+                    qrNote.style.color = "#0288d1"; // Màu xanh thanh toán
+                }
+            }
+
+            // Cập nhật đường dẫn ảnh QR mới kèm tham số amount tương thích động
+            if (qrImage) {
+                qrImage.src = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://grievous-dimmed-sassy.ngrok-free.dev"
+                    + contextPath + "/FakeBankController?roomId=" + roomId + "%26amount=" + currentAmount;
+            }
+
+            // Kích hoạt lại cơ chế kiểm tra trạng thái thanh toán thời gian thực
+            startRealTimeChecking();
         }
 
         function startRealTimeChecking() {
             clearInterval(pollingInterval);
 
             pollingInterval = setInterval(function() {
-                fetch('${pageContext.request.contextPath}/CheckPaymentStatusController?roomId=' + roomId)
+                fetch(contextPath + '/CheckPaymentStatusController?roomId=' + roomId)
                     .then(response => response.json())
                     .then(data => {
                         if (data.isPaid === true || data.isPaid === "true") {
@@ -519,7 +556,6 @@
                             submitBtn.classList.add("btn-continue-active");
                             submitBtn.disabled = false;
                         } else {
-                            // Giữ trạng thái khóa nếu chưa hoàn thành thanh toán thực tế
                             if(!submitBtn.classList.contains("btn-continue-active")) {
                                 submitBtn.innerHTML = '<i class="fa-solid fa-lock"></i> CHỜ THANH TOÁN';
                                 submitBtn.disabled = true;
@@ -531,6 +567,6 @@
         }
 
         radioMethods.forEach(radio => radio.addEventListener("change", verifyRealPayment));
-        verifyRealPayment();
+        verifyRealPayment(); // Gọi kích hoạt chạy lần đầu tiên khi tải xong DOM
     });
 </script>
