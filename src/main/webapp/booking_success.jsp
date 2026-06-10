@@ -314,12 +314,10 @@
         <div class="ticket-value">"${not empty hotelName ? hotelName : 'Verdelle Hotel Luxury'}"</div>
 
         <div class="ticket-label">Phòng:</div>
-        <div class="ticket-value">${not empty totalNights ? totalNights : '1'} x phòng "${not empty roomName ? roomName : 'Standard Room'}"</div>
+        <div class="ticket-value">${not empty requiredRooms ? requiredRooms : '1'} x phòng "${not empty roomName ? roomName : 'Standard Room'}"</div>
 
         <div class="ticket-label">Thanh toán:</div>
         <div class="ticket-value" style="color: #4caf50;">Đã thanh toán (via QR)</div>
-
-        <div class="discount-ribbon">Giảm 30%</div>
 
         <div class="total-price-row">
             <div class="ticket-label" style="font-weight: bold; color: #333;">Tổng cộng:</div>
