@@ -37,7 +37,7 @@ public class AdminAuthorizationFilter implements Filter {
         if (role == null || !"admin".equals(role)) {
 
             if (session != null) {
-                session.setAttribute("errorMessage", "Cậu không có quyền truy cập vào khu vực quản trị này đâu nè! 🤫");
+                session.setAttribute("errorMessage", "Cậu không có quyền truy cập vào khu vực quản trị này đâu nè!");
             }
             // Đá bay tài khoản không hợp lệ (Customer, Partner, v.v.) về lại trang chủ
             httpResponse.sendRedirect(httpRequest.getContextPath() + "/home.jsp");
