@@ -3,6 +3,7 @@ package Utils;
 import jakarta.mail.*;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
+
 import java.util.Properties;
 
 public class EmailService {
@@ -47,5 +48,32 @@ public class EmailService {
             e.printStackTrace();
             return false;
         }
+    }
+
+    public static void sendEmail(String toEmail, String subject, String content) throws Exception {
+        Properties props = new Properties();
+        props.put("mail.smtp.host", "smtp.gmail.com");
+        props.put("mail.smtp.port", "587");
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.starttls.enable", "true");
+
+        Session session = Session.getInstance(props, new Authenticator() {
+            @Override
+            protected PasswordAuthentication getPasswordAuthentication() {
+                return new PasswordAuthentication(FROM_EMAIL, APP_PASSWORD);
+            }
+        });
+
+        Message message = new MimeMessage(session);
+        // Thiết lập tên người gửi hiển thị ngọt ngào trên hòm thư của khách hàng
+        message.setFrom(new InternetAddress(FROM_EMAIL, "Verdelle Hotel - Noreply"));
+        message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(toEmail));
+        message.setSubject(subject);
+
+        // Nhận nội dung giao diện HTML truyền vào từ Controller
+        message.setContent(content, "text/html; charset=UTF-8");
+
+        // Tiến hành gửi Mail (Sẽ ném Exception ra ngoài để Controller bắt được nếu lỗi)
+        Transport.send(message);
     }
 }
