@@ -30,7 +30,7 @@ public class BookingController extends HttpServlet {
         String hotelStars = request.getParameter("hotelStars");
         String hotelAddress = request.getParameter("hotelAddress");
 
-        // 🌟 THUẬT TOÁN TÍNH SỐ ĐÊM TỪ CHUỖI DATERANGE CỦA HOME.JSP 🌟
+        // THUẬT TOÁN TÍNH SỐ ĐÊM TỪ CHUỖI DATERANGE CỦA HOME.JSP
         int totalNights = 1;
         if (dateRange != null && !dateRange.isEmpty()) {
             try {
@@ -52,7 +52,7 @@ public class BookingController extends HttpServlet {
         }
         if (totalNights <= 0) totalNights = 1;
 
-// 🌟 ÉP KIỂU SỐ PHÒNG 🌟
+// ÉP KIỂU SỐ PHÒNG
         int requiredRooms = 1;
 
 // 1. Ưu tiên lấy từ requiredRoomsStr trước
@@ -79,7 +79,7 @@ public class BookingController extends HttpServlet {
             }
         }
 
-// 🌟 TÍNH TOÁN GIÁ TIỀN CHUẨN XÁC: (GIÁ GỐC 1 PHÒNG) * SỐ PHÒNG * SỐ ĐÊM 🌟
+// TÍNH TOÁN GIÁ TIỀN CHUẨN XÁC: (GIÁ GỐC 1 PHÒNG) * SỐ PHÒNG * SỐ ĐÊM
         long pricePerNight = 1000000; // Giá mặc định phòng hờ
 
         try {
@@ -99,7 +99,7 @@ public class BookingController extends HttpServlet {
 // Tính tổng chi phí chốt đơn
         long finalTotalPrice = pricePerNight * requiredRooms * totalNights;
 
-    // 2. Cập nhật dữ liệu vào Map để đẩy sang JSP
+        // 2. Cập nhật dữ liệu vào Map để đẩy sang JSP
         Map<String, String> roomInfo = new HashMap<>();
         roomInfo.put("roomId", roomId != null ? roomId : "0");
         roomInfo.put("roomName", (roomNameParam != null && !roomNameParam.isEmpty()) ? roomNameParam : "Phòng Tiêu Chuẩn");
@@ -113,14 +113,14 @@ public class BookingController extends HttpServlet {
         roomInfo.put("bed", "Giường tiêu chuẩn theo hạng phòng");
         roomInfo.put("image", "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800");
 
-    // 3. Đẩy thêm các thuộc tính lên Request Scope
+        // 3. Đẩy thêm các thuộc tính lên Request Scope
         request.setAttribute("selectedRoom", roomInfo);
         request.setAttribute("totalNights", totalNights);
         request.setAttribute("requiredRooms", requiredRooms);
         request.setAttribute("dateRange", dateRange);
         request.setAttribute("guestsRooms", guestsRooms);
 
-    // 4. Chuyển tiếp dữ liệu sang trang booking.jsp ẩn
+        // 4. Chuyển tiếp dữ liệu sang trang booking.jsp ẩn
         request.getRequestDispatcher("booking.jsp").forward(request, response);
     }
 
