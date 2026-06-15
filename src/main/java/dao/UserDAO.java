@@ -12,7 +12,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.time.LocalDateTime;
+import java.util.Map;
 
 public class UserDAO {
 
@@ -223,4 +226,167 @@ public class UserDAO {
             query.setParameter("phone", phone); List<User> list = query.getResultList(); return list.isEmpty() ? null : list.get(0);
         } catch (Exception e) { e.printStackTrace(); return null; } finally { em.close(); }
     }
+    // 1. Tìm tài khoản bằng Email
+    public User findByEmail(String email) {
+        EntityManager em = JpaUtils.getEntityManager();
+        try {
+            TypedQuery<User> query = em.createQuery("SELECT u FROM User u WHERE u.email = :email", User.class);
+            query.setParameter("email", email);
+            List<User> list = query.getResultList();
+            return list.isEmpty() ? null : list.get(0);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        } finally { em.close(); }
+    }
+
+    // 2. Cập nhật chuỗi mã Token bí mật và thời gian hết hạn link vào DB
+    public void updateResetToken(String email, String token, LocalDateTime expiry) {
+        EntityManager em = JpaUtils.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            TypedQuery<User> query = em.createQuery("SELECT u FROM User u WHERE u.email = :email", User.class);
+            query.setParameter("email", email);
+            List<User> list = query.getResultList();
+            if (!list.isEmpty()) {
+                User user = list.get(0);
+                user.setResetToken(token);
+                user.setTokenExpiry(expiry);
+                em.merge(user);
+            }
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            e.printStackTrace();
+        } finally { em.close(); }
+    }
+
+    // 3. Tìm tài khoản bằng mã Token (Dùng lúc người dùng click link từ Gmail về)
+    public User findByResetToken(String token) {
+        EntityManager em = JpaUtils.getEntityManager();
+        try {
+            TypedQuery<User> query = em.createQuery("SELECT u FROM User u WHERE u.resetToken = :token", User.class);
+            query.setParameter("token", token);
+            List<User> list = query.getResultList();
+            return list.isEmpty() ? null : list.get(0);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        } finally { em.close(); }
+    }
+
+    // 4. Tiến hành ghi đè mật khẩu mới và tự động xóa sạch Token để link không dùng lại được nữa
+    public void updatePassword(String token, String newPassword) {
+        EntityManager em = JpaUtils.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            TypedQuery<User> query = em.createQuery("SELECT u FROM User u WHERE u.resetToken = :token", User.class);
+            query.setParameter("token", token);
+            List<User> list = query.getResultList();
+            if (!list.isEmpty()) {
+                User user = list.get(0);
+                user.setPassword(newPassword);
+                user.setResetToken(null);    // Xóa trắng token cũ đi để bảo mật
+                user.setTokenExpiry(null);   // Xóa trắng hạn dùng
+                em.merge(user);
+            }
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            e.printStackTrace();
+        } finally { em.close(); }
+    }
+
+    // Lấy UserID bằng Số điện thoại lúc đăng nhập
+    public int getUserIdByPhone(String phone) {
+        String query = "SELECT UserID FROM Users WHERE PhoneNumber = ?";
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement ps = conn.prepareStatement(query)) {
+            ps.setString(1, phone);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt("UserID");
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+        return -1; // Trả về -1 nếu không tìm thấy
+    }
+
+
+    public List<Room> getGroupedRoomsForMixBooking(int hotelId, String checkIn, String checkOut) {
+        List<Room> list = new ArrayList<>();
+        String query = "SELECT MIN(r.RoomID) as RepRoomID, r.HotelID, r.RoomType, " +
+                "MIN(r.Price) as Price, MIN(r.MaxPeople) as MaxPeople, MIN(r.Area) as Area, " +
+                "COUNT(r.RoomID) as AvailableCount " +
+                "FROM Rooms r WHERE r.HotelID = ? AND r.Status = 'Available' " +
+                "AND r.RoomID NOT IN (SELECT RoomID FROM Bookings WHERE BookingStatus = 'Success' AND RoomID IS NOT NULL AND (? < CheckOutDate AND ? > CheckInDate)) " +
+                "GROUP BY r.HotelID, r.RoomType";
+        try (Connection conn = DBConnect.getConnection(); PreparedStatement ps = conn.prepareStatement(query)) {
+            ps.setInt(1, hotelId);
+            try { ps.setDate(2, java.sql.Date.valueOf(checkIn)); ps.setDate(3, java.sql.Date.valueOf(checkOut)); }
+            catch (Exception e) { ps.setDate(2, java.sql.Date.valueOf("2026-06-01")); ps.setDate(3, java.sql.Date.valueOf("2026-06-05")); }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Room r = new Room();
+                    r.setRoomId(rs.getInt("RepRoomID"));
+                    r.setHotelId(rs.getInt("HotelID"));
+                    r.setRoomTypeName(rs.getString("RoomType"));
+                    r.setPrice(rs.getDouble("Price"));
+                    r.setArea(rs.getInt("Area"));
+                    int maxP = rs.getInt("MaxPeople");
+                    r.setMaxPeople(maxP > 0 ? maxP : 3);
+                    r.setAvailableCount(rs.getInt("AvailableCount"));
+                    list.add(r);
+                }
+            }
+        } catch (Exception e) { e.printStackTrace(); } return list;
+    }
+
+    public List<Integer> getAvailableRoomIds(int hotelId, String checkIn, String checkOut, String roomType, int quantity, String preference) {
+        List<Integer> list = new ArrayList<>();
+        String orderBy = "random".equals(preference) ? "ORDER BY NEWID()" : "ORDER BY RoomID ASC";
+        String query = "SELECT TOP " + quantity + " RoomID FROM Rooms WHERE HotelID = ? AND RoomType = ? AND Status = 'Available' " +
+                "AND RoomID NOT IN (SELECT RoomID FROM Bookings WHERE BookingStatus = 'Success' AND RoomID IS NOT NULL AND (? < CheckOutDate AND ? > CheckInDate)) " + orderBy;
+        try (Connection conn = DBConnect.getConnection(); PreparedStatement ps = conn.prepareStatement(query)) {
+            ps.setInt(1, hotelId);
+            ps.setString(2, roomType);
+            try { ps.setDate(3, java.sql.Date.valueOf(checkIn)); ps.setDate(4, java.sql.Date.valueOf(checkOut)); }
+            catch (Exception e) { ps.setDate(3, java.sql.Date.valueOf("2026-06-01")); ps.setDate(4, java.sql.Date.valueOf("2026-06-05")); }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) { list.add(rs.getInt("RoomID")); }
+            }
+        } catch (Exception e) { e.printStackTrace(); } return list;
+    }
+
+    public List<Map<String, Object>> getAssignedRoomsForMix(int hotelId, String roomType, int qty, String strategy) {
+        List<Map<String, Object>> resultList = new ArrayList<>();
+        String orderByClause = "random".equals(strategy) ? "NEWID()" : "RoomNumber ASC";
+
+        // Ghép chuỗi trực tiếp số lượng để tránh lỗi Incorrect Syntax near '@P0' của TOP(?)
+        String sql = "SELECT TOP (" + qty + ") RoomNumber, RoomType, Price FROM Rooms " +
+                "WHERE HotelID = ? AND RoomType = ? AND Status = 'Available' " +
+                "ORDER BY " + orderByClause;
+
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, hotelId);
+            ps.setString(2, roomType);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("RoomNumber", rs.getString("RoomNumber")); // P101, P102...
+                    map.put("RoomType", rs.getString("RoomType"));
+                    map.put("Price", rs.getBigDecimal("Price"));
+                    resultList.add(map);
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Lỗi tại getAssignedRoomsForMix: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return resultList;
+    }
+
+
 }
