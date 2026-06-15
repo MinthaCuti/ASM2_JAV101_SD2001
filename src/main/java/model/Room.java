@@ -5,6 +5,7 @@ public class Room {
     private int roomId;
     private int hotelId;
     private String roomName;
+    private String roomNumber;
     private String roomTypeName;
     private String description;
     private double price;
@@ -15,19 +16,21 @@ public class Room {
     private boolean hasBathtub;
     private boolean hasBreakfast;
     private boolean isRecommended;
+    private String status;
+    private int maxPeople;
+    private int availableCount;
 
     // Constructor mặc định không tham số
+
     public Room() {
     }
 
-    // Constructor đầy đủ tham số
-    public Room(int id, int roomId, int hotelId, String roomName, String roomTypeName, String description,
-                double price, int maxAdults, int maxChildren, int area, String image,
-                boolean hasBathtub, boolean hasBreakfast, boolean isRecommended) {
+    public Room(int id, int roomId, int hotelId, String roomName, String roomNumber, String roomTypeName, String description, double price, int maxAdults, int maxChildren, int area, String image, boolean hasBathtub, boolean hasBreakfast, boolean isRecommended, String status, int maxPeople, int availableCount) {
         this.id = id;
         this.roomId = roomId;
         this.hotelId = hotelId;
         this.roomName = roomName;
+        this.roomNumber = roomNumber;
         this.roomTypeName = roomTypeName;
         this.description = description;
         this.price = price;
@@ -38,9 +41,12 @@ public class Room {
         this.hasBathtub = hasBathtub;
         this.hasBreakfast = hasBreakfast;
         this.isRecommended = isRecommended;
+        this.status = status;
+        this.maxPeople = maxPeople;
+        this.availableCount = availableCount;
     }
 
-    // Hệ thống Getter và Setter bắt buộc phải có để DAO và Controller gọi đến
+    // Hệ thống Getter và Setter
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
 
@@ -82,4 +88,17 @@ public class Room {
 
     public boolean isRecommended() { return isRecommended; }
     public void setRecommended(boolean recommended) { this.isRecommended = recommended; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+
+    public int getMaxPeople() { return maxPeople; }
+    public void setMaxPeople(int maxPeople) { this.maxPeople = maxPeople; }
+
+    public int getAvailableCount() { return availableCount; }
+    public void setAvailableCount(int availableCount) { this.availableCount = availableCount; }
+
+    public String getRoomNumber() { return roomNumber; }
+
+    public void setRoomNumber(String roomNumber) { this.roomNumber = roomNumber;}
 }
