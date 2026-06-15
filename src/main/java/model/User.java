@@ -1,6 +1,7 @@
 package model;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime; // Thêm import này để quản lý ngày giờ hệ thống
 
 @Entity
 @Table(name = "Users")
@@ -34,6 +35,12 @@ public class User {
 
     @Column(name = "IsActive")
     private Boolean isActive = true; // Mặc định tài khoản mới luôn là true (hoạt động)
+
+    @Column(name = "ResetToken")
+    private String resetToken;
+
+    @Column(name = "TokenExpiry")
+    private LocalDateTime tokenExpiry;
 
     // Constructor không tham số
     public User() {
@@ -90,4 +97,10 @@ public class User {
 
     public Boolean getIsActive() { return isActive; }
     public void setIsActive(Boolean isActive) { this.isActive = isActive; }
+
+    public String getResetToken() { return resetToken; }
+    public void setResetToken(String resetToken) { this.resetToken = resetToken; }
+
+    public LocalDateTime getTokenExpiry() { return tokenExpiry; }
+    public void setTokenExpiry(LocalDateTime tokenExpiry) { this.tokenExpiry = tokenExpiry; }
 }
