@@ -44,6 +44,10 @@ public class LoginController extends HttpServlet {
         HttpSession session = request.getSession();
         session.setAttribute("userPhone", phone);
 
+        // Lưu lại UserID của người dùng
+        int userId = userDAO.getUserIdByPhone(phone); // Cậu viết thêm hàm lấy ID này trong UserDAO nhé
+        session.setAttribute("userId", userId);
+
         // Lấy trực tiếp FirstName từ hàm trong UserDAO để hiển thị câu chào mừng
         String firstName = userDAO.getFirstNameByPhone(phone);
         session.setAttribute("firstName", firstName);
