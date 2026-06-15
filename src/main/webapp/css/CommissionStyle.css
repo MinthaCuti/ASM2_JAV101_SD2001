@@ -191,3 +191,75 @@ body.dark-mode .admin-submenu a:hover {
     background-color: #2c2c2c !important;
     color: var(--primary-teal) !important;
 }
+
+/* CSS căn chỉnh bộ lọc đẹp mắt */
+.filter-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 25px;
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid #e0e0e0;
+    margin-bottom: 25px;
+    align-items: flex-end;
+}
+.filter-col {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.filter-label {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #333;
+}
+.filter-input {
+    padding: 10px 14px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    outline: none;
+    min-width: 200px;
+    box-sizing: border-box;
+}
+.filter-input:focus {
+    border-color: #1e62d0;
+}
+.checkbox-group {
+    display: flex;
+    gap: 15px;
+    height: 41px;
+    align-items: center;
+}
+.custom-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+.custom-checkbox input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+.search-wrapper {
+    display: flex;
+    gap: 10px;
+}
+.btn-filter-submit {
+    background-color: #1e62d0;
+    color: white;
+    border: none;
+    padding: 0 20px;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 0.9rem;
+    cursor: pointer;
+    height: 41px;
+    transition: background 0.2s;
+}
+.btn-filter-submit:hover {
+    background-color: #154fa3;
+}
