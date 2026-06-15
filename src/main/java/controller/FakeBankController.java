@@ -49,7 +49,7 @@ public class FakeBankController extends HttpServlet {
         out.println("  <p>Thanh toán đơn đặt phòng tại <b>Verdelle Hotel</b></p>");
 
         out.println("  <div class='amount-box'>");
-        out.println("    <p class='amount-title'>SỐ TIỀN CẦN CHUYỂN KIND</p>");
+        out.println("    <p class='amount-title'>SỐ TIỀN CẦN CHUYỂN KHOẢN</p>");
         out.println("    <p class='amount-value'>" + (amount != null ? amount : "0") + " đ</p>");
         out.println("  </div>");
 
