@@ -13,6 +13,7 @@ import java.io.IOException;
         "/quanly.jsp",
         "/UserController",
         "/HoaHongController",
+        "/quan-ly-hoa-hong",
         "/admin/*"
 })
 public class AdminAuthorizationFilter implements Filter {
@@ -33,14 +34,14 @@ public class AdminAuthorizationFilter implements Filter {
         String role = (session != null) ? (String) session.getAttribute("userRole") : null;
 
         // Cơ chế chặn: Nếu role trống HOẶC là "Customer" (Không có quyền Admin)
-        if (role == null || "Customer".equalsIgnoreCase(role)) {
-            // Lưu một thông báo lỗi vào session để hiển thị nếu cần
+        if (role == null || !"admin".equals(role)) {
+
             if (session != null) {
-                session.setAttribute("errorMessage", "Bạn không có quyền truy cập vào khu vực quản trị!");
+                session.setAttribute("errorMessage", "Cậu không có quyền truy cập vào khu vực quản trị này đâu nè! 🤫");
             }
-            // Đá bay tài khoản này về lại trang chủ home.jsp
+            // Đá bay tài khoản không hợp lệ (Customer, Partner, v.v.) về lại trang chủ
             httpResponse.sendRedirect(httpRequest.getContextPath() + "/home.jsp");
-            return; // Dừng xử lý tại đây, không cho đi tiếp vào trang quản lý
+            return;
         }
 
         // Nếu là Admin hoặc Partner hợp lệ, cho phép đi tiếp đến tài nguyên họ muốn
