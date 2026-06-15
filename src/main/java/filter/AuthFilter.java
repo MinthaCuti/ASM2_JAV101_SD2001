@@ -7,7 +7,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 
-@WebFilter(urlPatterns = {"/home.jsp", "/booking.jsp", "/SearchController", "/ProfileServlet", "/userdetail.jsp","/profile.jsp", "/update.jsp", "/BookingController"})
+@WebFilter(urlPatterns = {"/home.jsp", "/booking.jsp", "/SearchController", "/ProfileServlet", "/userdetail.jsp","/profile.jsp", "/update.jsp", "/BookingController", "/CommissionController", "/UserdetailController", "/accountmanagement.jsp", "/commission.jsp", "/quan-ly-hoa-hong", "/booking.jsp", "/BookingController", "/payment.jsp", "/PaymentController"})
 public class AuthFilter implements Filter {
 
     @Override
