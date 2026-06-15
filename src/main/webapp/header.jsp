@@ -11,7 +11,7 @@
         <li><a href="RoomController?action=list" style="color: #fff; text-decoration: none; font-size: 0.95rem;">Phòng</a></li>
         <li><a href="#" style="color: #fff; text-decoration: none; font-size: 0.95rem;">Liên hệ</a></li>
 
-        <c:if test="${sessionScope.userRole == 'admin' || sessionScope.userRole == 'partner'}">
+        <c:if test="${sessionScope.userRole == 'admin'}">
             <li class="admin-dropdown-container">
                 <button class="admin-dropdown-btn" id="adminDropdownBtn">
                     Quản lý <i class="fa-solid fa-chevron-down" style="font-size: 0.7rem;"></i>
@@ -25,6 +25,21 @@
                     <li>
                         <a href="${pageContext.request.contextPath}/quan-ly-hoa-hong">
                             <i class="fa-solid fa-comments-dollar" style="color: #ff9800;"></i> Quản lý hoa hồng
+                        </a>
+                    </li>
+                </ul>
+            </li>
+        </c:if>
+
+        <c:if test="${sessionScope.userRole == 'partner' || sessionScope.userRole == 'hotel partner'}">
+            <li class="admin-dropdown-container">
+                <button class="admin-dropdown-btn" id="partnerDropdownBtn" style="background-color: transparent; color: #fff; border: none; cursor: pointer; font-size: 0.95rem;">
+                    Quản lý khách sạn <i class="fa-solid fa-chevron-down" style="font-size: 0.7rem;"></i>
+                </button>
+                <ul class="admin-submenu" id="partnerSubmenu">
+                    <li>
+                        <a href="${pageContext.request.contextPath}/quan-ly-phong">
+                            <i class="fa-solid fa-bed" style="color: #4caf50;"></i> Quản lý danh sách phòng
                         </a>
                     </li>
                 </ul>
@@ -75,23 +90,25 @@
 </nav>
 
 <script>
-    // 1. CHẠY NGAY LẬP TỨC: Ép class dark-mode vào body trước khi render layout
     if (localStorage.getItem('theme') === 'dark') {
         document.body.classList.add('dark-mode');
     } else {
         document.body.classList.remove('dark-mode')
     }
 
-    // 2. CHỜ HTML TẢI XONG: Đăng ký tất cả các sự kiện tương tác
     document.addEventListener("DOMContentLoaded", function() {
         const hamburgerBtn = document.getElementById('hamburgerBtn');
         const hamburgerMenu = document.getElementById('hamburgerMenu');
         const adminDropdownBtn = document.getElementById('adminDropdownBtn');
         const adminSubmenu = document.getElementById('adminSubmenu');
+
+        // KHỞI TẠO BIẾN CHO PARTNER
+        const partnerDropdownBtn = document.getElementById('partnerDropdownBtn');
+        const partnerSubmenu = document.getElementById('partnerSubmenu');
+
         const themeToggleBtn = document.getElementById('themeToggleBtn');
         const toggleIcon = document.getElementById('toggleIcon');
 
-        // Đồng bộ trạng thái Icon công tắc từ LocalStorage
         if (toggleIcon) {
             if (localStorage.getItem('theme') === 'dark') {
                 toggleIcon.className = "fa-solid fa-toggle-on";
@@ -100,16 +117,11 @@
             }
         }
 
-        // Xử lý sự kiện click đổi giao diện (Ép ăn ngay lập tức không cần F5)
         if (themeToggleBtn) {
             themeToggleBtn.addEventListener('click', function(e) {
                 e.preventDefault();
-                e.stopPropagation(); // Ngăn chặn sự kiện đóng menu của document chạy đè lên
-
-                // Thực hiện đổi class ngay lập tức trên body
+                e.stopPropagation();
                 const isDark = document.body.classList.toggle('dark-mode');
-
-                // Đồng bộ bộ nhớ máy và thay đổi icon tương ứng với trạng thái mới
                 if (isDark) {
                     localStorage.setItem('theme', 'dark');
                     if (toggleIcon) toggleIcon.className = "fa-solid fa-toggle-on";
@@ -120,15 +132,23 @@
             });
         }
 
-        // Xử lý click cho nút Quản lý Admin
         if (adminDropdownBtn && adminSubmenu) {
             adminDropdownBtn.addEventListener('click', function(e) {
                 e.stopPropagation();
                 adminSubmenu.classList.toggle('show');
+                if (partnerSubmenu) partnerSubmenu.classList.remove('show'); // Đóng menu kia nếu đang mở
             });
         }
 
-        // Xử lý click cho nút Hamburger Menu
+        // XỬ LÝ CLICK CHO NÚT QUẢN LÝ PARTNER
+        if (partnerDropdownBtn && partnerSubmenu) {
+            partnerDropdownBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                partnerSubmenu.classList.toggle('show');
+                if (adminSubmenu) adminSubmenu.classList.remove('show'); // Đóng menu kia nếu đang mở
+            });
+        }
+
         if (hamburgerBtn && hamburgerMenu) {
             hamburgerBtn.addEventListener('click', function(e) {
                 e.stopPropagation();
@@ -143,11 +163,13 @@
             });
         }
 
-        // Đóng tất cả menu nếu click ra ngoài màn hình (Không áp dụng khi click vào các nút chức năng)
         document.addEventListener('click', function(e) {
-            // Kiểm tra xem vị trí click có phải là các nút điều hướng hay không để tránh đóng nhầm
-            if (adminSubmenu && !adminDropdownBtn.contains(e.target)) {
+            if (adminSubmenu && adminDropdownBtn && !adminDropdownBtn.contains(e.target)) {
                 adminSubmenu.classList.remove('show');
+            }
+            // TỰ ĐỘNG ĐÓNG MENU PARTNER KHI BẤM RA NGOÀI MÀN HÌNH
+            if (partnerSubmenu && partnerDropdownBtn && !partnerDropdownBtn.contains(e.target)) {
+                partnerSubmenu.classList.remove('show');
             }
             if (hamburgerMenu && !hamburgerBtn.contains(e.target) && !hamburgerMenu.contains(e.target)) {
                 hamburgerMenu.classList.remove('show', 'active');
